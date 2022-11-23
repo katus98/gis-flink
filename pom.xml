@@ -17,6 +17,7 @@
     <modules>
         <module>gis-flink-core</module>
         <module>gis-flink-example</module>
+        <module>gis-flink-common</module>
     </modules>
 
     <properties>
@@ -26,6 +27,11 @@
         <flink.version>1.15.2</flink.version>
         <slf4j.version>1.7.32</slf4j.version>
         <logback.version>1.2.3</logback.version>
+        <kafka.clients.version>3.3.1</kafka.clients.version>
+        <lombok.version>1.18.24</lombok.version>
+        <sshd-sftp.version>2.6.0</sshd-sftp.version>
+        <jsch.version>0.1.55</jsch.version>
+        <trilead-ssh2.version>1.0.0-build222</trilead-ssh2.version>
     </properties>
 
     <dependencyManagement>
@@ -51,9 +57,29 @@
                 <version>${flink.version}</version>
             </dependency>
             <dependency>
-                <groupId>log4j</groupId>
-                <artifactId>log4j</artifactId>
-                <version>1.2.17</version>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka.clients.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.trilead</groupId>
+                <artifactId>trilead-ssh2</artifactId>
+                <version>${trilead-ssh2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>${jsch.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.sshd</groupId>
+                <artifactId>sshd-sftp</artifactId>
+                <version>${sshd-sftp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
