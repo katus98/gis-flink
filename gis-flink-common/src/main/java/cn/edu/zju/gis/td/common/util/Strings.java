@@ -99,9 +99,21 @@ public final class Strings {
 
     /**
      * 生成全局唯一UUID字符串
+     *
      * @return UUID字符串
      */
     public static synchronized String generateUuid() {
         return UUID.randomUUID().toString();
+    }
+
+    /**
+     * 检查字符串是否只包含数字和字母
+     *
+     * @param str 字符串
+     * @return 是否只包含数字和字母
+     */
+    public static boolean allLetterDigit(String str) {
+        String regex = "^[a-z0-9A-Z]+$";
+        return str.matches(regex);
     }
 }
