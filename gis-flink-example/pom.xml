@@ -50,6 +50,10 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
         </dependency>
+        <dependency>
+            <groupId>cn.edu.zju.gis.td</groupId>
+            <artifactId>gis-flink-common</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
