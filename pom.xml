@@ -28,6 +28,9 @@
         <slf4j.version>1.7.32</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <kafka.clients.version>3.3.1</kafka.clients.version>
+        <jackson.version>2.14.1</jackson.version>
+        <hikari.version>4.0.3</hikari.version>
+        <postgresql.version>42.5.1</postgresql.version>
         <lombok.version>1.18.24</lombok.version>
         <sshd-sftp.version>2.6.0</sshd-sftp.version>
         <jsch.version>0.1.55</jsch.version>
@@ -60,6 +63,21 @@
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka-clients</artifactId>
                 <version>${kafka.clients.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>${hikari.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.trilead</groupId>

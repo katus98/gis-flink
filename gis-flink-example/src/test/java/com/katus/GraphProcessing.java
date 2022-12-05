@@ -11,8 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
+ * 图结构处理工作
+ *
  * @author SUN Katus
  * @version 1.0, 2022-11-28
  */
@@ -26,8 +29,8 @@ public class GraphProcessing {
                 "F:\\data\\graduation\\graph\\edges_ori_f.csv",
                 "F:\\data\\graduation\\graph\\center_points.csv",
                 "F:\\data\\graduation\\graph\\nodes_real.csv",
-                "F:\\data\\graduation\\graph\\edges_jinhua_pair.tsv",
-                "F:\\data\\graduation\\graph\\nodes_jinhua_pair.tsv"
+                "F:\\data\\graduation\\graph\\edges_jinhua_pair_2.tsv",
+                "F:\\data\\graduation\\graph\\nodes_jinhua_pair_2.tsv"
         }, true, true);
     }
 
@@ -79,7 +82,6 @@ public class GraphProcessing {
 
     /**
      * 生成图的节点与边
-     * todo: 计算道路方向角范围
      */
     private static void generate(String[] filenames, boolean hasTitle, boolean needPair) throws IOException {
         FsManipulator fsManipulator = FsManipulatorFactory.create();
@@ -106,6 +108,7 @@ public class GraphProcessing {
             }
         }
         log.info("{}, {}", nodeList.size(), map.size());
+        // 生成点文件内容
         List<String> contents = new ArrayList<>();
         contents.add(Node.title());
         for (Map.Entry<Tuple<Double, Double>, Node> entry : map.entrySet()) {
@@ -120,6 +123,7 @@ public class GraphProcessing {
         while (it.hasNext()) {
             edgeList.add(Edge.loadFromEdges(it.next()));
         }
+        // 计算所有边的起点与终点
         for (Edge edge : edgeList) {
             if (map.containsKey(edge.getStartPoint())) {
                 edge.setStartId(map.get(edge.getStartPoint()).id);
@@ -136,10 +140,12 @@ public class GraphProcessing {
                 log.info("{} ({}, {})", edge.getEndPoint(), node.x, node.y);
             }
         }
+        // 生成边文件内容
         contents.add(Edge.title());
         for (Edge edge : edgeList) {
             contents.add(edge.toLine());
         }
+        // 是否针对双向道路生成对向边对
         if (needPair) {
             for (Edge edge : edgeList) {
                 if (!edge.isOneway()) {
@@ -244,13 +250,14 @@ public class GraphProcessing {
         private int hierarchy;
         private double length;
         private Tuple<Double, Double> startPoint, endPoint;
+        private List<Double> directions = new ArrayList<>();
 
         public String toLine() {
             return String.valueOf(id) + '\t' + startId + '\t' + endId + '\t' + osmId + '\t' +
                     fClass + '\t' + oriName + '\t' + oriRef + '\t' +
                     newName + '\t' + newRef + '\t' + isOneway + '\t' +
                     maxSpeed + '\t' + isBridge + '\t' + isTunnel + '\t' +
-                    hierarchy + '\t' + length + '\t' + wkt;
+                    hierarchy + '\t' + length + '\t' + String.format("{%s}", directions.stream().map(Object::toString).collect(Collectors.joining(","))) + '\t' + wkt;
         }
 
         public Edge pair(long id) {
@@ -271,8 +278,8 @@ public class GraphProcessing {
             pairEdge.setTunnel(isTunnel);
             pairEdge.setHierarchy(hierarchy);
             pairEdge.setLength(length);
-            pairEdge.setStartPoint(endPoint);
-            pairEdge.setEndPoint(startPoint);
+            pairEdge.setWkt(wkt.substring(12, wkt.length() - 1));
+            refactorWkt(pairEdge, "T");
             return pairEdge;
         }
 
@@ -298,7 +305,7 @@ public class GraphProcessing {
         }
 
         public static String title() {
-            return "id\tstartId\tendId\tosmId\tfClass\toriName\toriRef\tnewName\tnewRef\tisOneway\tmaxSpeed\tisBridge\tisTunnel\thierarchy\tlength\twkt";
+            return "id\tstartId\tendId\tosmId\tfClass\toriName\toriRef\tnewName\tnewRef\tisOneway\tmaxSpeed\tisBridge\tisTunnel\thierarchy\tlength\tdirections\twkt";
         }
 
         private static void refactorWkt(Edge edge, String oneway) {
@@ -312,10 +319,41 @@ public class GraphProcessing {
                 list.addAll(Arrays.asList(cords));
             }
             edge.setWkt(String.format("LINESTRING (%s)", String.join(",", list)));
-            String[] ps = list.get(0).split(" ");
-            edge.setStartPoint(new Tuple<>(Double.valueOf(ps[0]), Double.valueOf(ps[1])));
-            ps = list.get(list.size() - 1).split(" ");
-            edge.setEndPoint(new Tuple<>(Double.valueOf(ps[0]), Double.valueOf(ps[1])));
+            List<Tuple<Double, Double>> points = parseFromPointCords(list);
+            edge.setStartPoint(points.get(0));
+            edge.setEndPoint(points.get(points.size() - 1));
+            for (int i = 0; i < points.size() - 1; i++) {
+                edge.getDirections().add(calDirect(points.get(i), points.get(i + 1)));
+            }
+        }
+
+        private static List<Tuple<Double, Double>> parseFromPointCords(List<String> cords) {
+            return cords.stream().map(Edge::parseFromPointCord).collect(Collectors.toList());
+        }
+
+        private static Tuple<Double, Double> parseFromPointCord(String cord) {
+            String[] ps = cord.split(" ");
+            return new Tuple<>(Double.valueOf(ps[0]), Double.valueOf(ps[1]));
+        }
+
+        private static double calDirect(Tuple<Double, Double> startPoint, Tuple<Double, Double> endPoint) {
+            double deltaX = endPoint._1() - startPoint._1(), deltaY = endPoint._2() - startPoint._2();
+            if (deltaX == 0.0) {
+                return deltaY >= 0 ? 0.0 : 180.0;   // 如果位置没有变化则方向角默认值为0.0
+            }
+            if (deltaY == 0.0) {
+                return deltaX > 0 ? 90.0 : 270.0;
+            }
+            double red = Math.atan(deltaX / deltaY);
+            if (deltaX > 0) {
+                return deltaY > 0 ? red2Deg(red) : red2Deg(red + Math.PI);
+            } else {
+                return deltaY > 0 ? red2Deg(red + 2 * Math.PI) : red2Deg(red + Math.PI);
+            }
+        }
+
+        private static double red2Deg(double red) {
+            return red / Math.PI * 180.0;
         }
     }
 }

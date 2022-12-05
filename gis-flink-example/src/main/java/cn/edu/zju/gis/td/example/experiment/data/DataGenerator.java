@@ -1,11 +1,18 @@
-package com.katus.data;
+package cn.edu.zju.gis.td.example.experiment.data;
 
+import cn.edu.zju.gis.td.common.io.FsManipulator;
+import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
+import cn.edu.zju.gis.td.common.io.LineIterator;
+import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -16,9 +23,13 @@ import java.util.concurrent.Future;
  */
 @Slf4j
 public class DataGenerator {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, ParseException {
+        generateTaxiStream(getKafkaProps());
+    }
+
+    private static Properties getKafkaProps() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", "43.143.61.6:9092");
+//        properties.put("bootstrap.servers", "*:9092");
         properties.put("acks", "all");
         properties.put("retries", 0);
         properties.put("batch.size", 16384);
@@ -26,7 +37,33 @@ public class DataGenerator {
         properties.put("buffer.memory", 33554432);
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        synSend(properties);
+        return properties;
+    }
+
+    private static void generateTaxiStream(Properties properties) throws IOException, ParseException {
+        FsManipulator fsManipulator = FsManipulatorFactory.create();
+        LineIterator it = fsManipulator.getLineIterator("F:\\data\\graduation\\gps_ori\\MDTUpInfo_0501.csv");
+        KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
+        ObjectMapper mapper = new ObjectMapper();
+        long count = 0;
+        while (it.hasNext()) {
+            GpsPoint point = new GpsPoint(it.next());
+            ProducerRecord<String, String> record = new ProducerRecord<>("taxi-test-0501", 0, point.getTimestamp(), String.valueOf(point.getId()), mapper.writeValueAsString(point));
+            Future<RecordMetadata> future = producer.send(record);
+            try {
+                RecordMetadata metadata = future.get();
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+            count++;
+            if (count % 1000 == 0) {
+                log.info("{} lines finished!", count);
+            }
+        }
+        producer.flush();
+        producer.close();
+        log.info("All finished!");
     }
 
     /**
