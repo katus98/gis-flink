@@ -1,5 +1,6 @@
 package cn.edu.zju.gis.td.example.demo;
 
+import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
@@ -21,7 +22,7 @@ public class DemoWithKafka {
         env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
         // 加载数据源 : 此处从Kafka加载
         KafkaSource<String> source = KafkaSource.<String>builder()
-                .setBootstrapServers("43.143.61.6:9092")
+                .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
                 .setTopics("test")
                 .setStartingOffsets(OffsetsInitializer.earliest())
                 .setValueOnlyDeserializer(new SimpleStringSchema())

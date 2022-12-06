@@ -22,18 +22,17 @@ import java.sql.Statement;
  */
 public class ClosestMatching {
     public static void main(String[] args) throws Exception {
-        // 准备流处理环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        // 设置运行模式 : 流模式 批模式 自动模式
         env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
-        // 加载数据源 : 此处从Kafka加载
+        // 加载GPS数据流
         KafkaSource<String> source = KafkaSource.<String>builder()
-                .setBootstrapServers("10.79.231.85:9092")
-                .setTopics("taxi-test-0501")
-                .setStartingOffsets(OffsetsInitializer.timestamp(1651334400000L))
+                .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
+                .setTopics(GlobalConfig.KAFKA_GPS_TOPIC)
+                .setStartingOffsets(OffsetsInitializer.timestamp(GlobalConfig.TIME_0501))
                 .setValueOnlyDeserializer(new SimpleStringSchema())
                 .build();
-        DataStreamSource<String> resSource = env.fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), "Kafka Source");
+        DataStreamSource<String> resSource = env.fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TOPIC);
+        // 最近地图匹配
         resSource.map((MapFunction<String, GpsPoint>) s -> GlobalUtil.JSON_MAPPER.readValue(s, GpsPoint.class))
                 .map((MapFunction<GpsPoint, String>) gpsPoint -> {
                     String sql = String.format("WITH ip AS (SELECT ST_Transform(ST_GeomFromText('POINT(%f %f)', 4326), 32650) AS p) " +
@@ -62,6 +61,6 @@ public class ClosestMatching {
                 })
                 .print();
         // 执行程序 指定当前程序名称
-        env.execute("flink-connect-kafka");
+        env.execute("closest-matching");
     }
 }

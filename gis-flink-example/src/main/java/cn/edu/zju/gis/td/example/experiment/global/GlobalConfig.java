@@ -22,4 +22,21 @@ public final class GlobalConfig {
 //        config.setPassword("");
         PG_DATA_SOURCE = new HikariDataSource(PG_DATA_SOURCE_CONFIG);
     }
+
+    /**
+     * 消息队列
+     */
+    public static String KAFKA_SERVER;
+    public static String KAFKA_GPS_TOPIC;
+    public static String KAFKA_ILLEGALITY_TOPIC;
+    public static String KAFKA_ACCIDENT_TOPIC;
+    public static long TIME_0501;
+
+    static {
+//        KAFKA_SERVER = "*:9092";
+        KAFKA_GPS_TOPIC = "taxi-test-0501";
+        KAFKA_ILLEGALITY_TOPIC = "illegal";
+        KAFKA_ACCIDENT_TOPIC = "accident";
+        TIME_0501 = 1651334400000L;
+    }
 }
