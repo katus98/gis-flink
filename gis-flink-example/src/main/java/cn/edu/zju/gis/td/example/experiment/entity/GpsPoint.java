@@ -1,8 +1,8 @@
 package cn.edu.zju.gis.td.example.experiment.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -11,9 +11,9 @@ import java.text.SimpleDateFormat;
  * @author SUN Katus
  * @version 1.0, 2022-11-30
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Setter
+@ToString
 public class GpsPoint {
     private static final SimpleDateFormat FORMAT1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"), FORMAT2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private long id;
@@ -21,6 +21,9 @@ public class GpsPoint {
     private double lon, lat;
     private double speed, height, direct, mileage;
     private long timestamp;
+
+    public GpsPoint() {
+    }
 
     public GpsPoint(String line) throws ParseException {
         String[] items = line.split(",");
