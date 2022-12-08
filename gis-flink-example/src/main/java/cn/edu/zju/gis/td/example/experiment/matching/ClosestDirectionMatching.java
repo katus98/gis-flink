@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * 最近道路方向匹配算法
- * 计算GPS方向吻合的最近道路
+ * 计算GPS方向吻合的最近道路分割
  *
  * @author SUN Katus
  * @version 1.0, 2022-12-07
@@ -44,23 +44,24 @@ public class ClosestDirectionMatching implements Matching<GpsPoint, MatchingResu
         ResultSet rs = stmt.executeQuery(sql);
         List<MatchingResult> resList = new ArrayList<>();
         while (rs.next()) {
-            resList.add(new MatchingResult(rs));
+            resList.add(new MatchingResult(gpsPoint, rs));
         }
         rs.close();
         stmt.close();
         conn.close();
         for (MatchingResult matchingResult : resList) {
-            if (judgeDirections(gpsPoint, matchingResult)) {
+            if (judgeDirections(matchingResult)) {
+                matchingResult.update();
                 return matchingResult;
             }
         }
         return null;
     }
 
-    protected boolean judgeDirections(GpsPoint gpsPoint, MatchingResult matchingResult) {
+    protected boolean judgeDirections(MatchingResult matchingResult) {
         List<Double> directions = matchingResult.getEdgeWithInfo().getDirections();
         for (Double direction : directions) {
-            if (judgeDirection(direction, gpsPoint.getDirect())) {
+            if (judgeDirection(direction, matchingResult.getGpsPoint().getDirect())) {
                 return true;
             }
         }

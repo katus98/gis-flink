@@ -3,6 +3,11 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
+import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
+import org.geotools.geometry.jts.JTSFactoryFinder;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -45,8 +50,9 @@ public class ClosestMatching implements Matching<GpsPoint, MatchingResult> {
         ResultSet rs = stmt.executeQuery(sql);
         List<MatchingResult> resList = new ArrayList<>();
         while (rs.next()) {
-            MatchingResult matchingResult = new MatchingResult(rs);
+            MatchingResult matchingResult = new MatchingResult(gpsPoint, rs);
             if (matchingResult.getEdgeWithInfo().isOneway()) {
+                matchingResult.update();
                 return matchingResult;
             }
             resList.add(matchingResult);
@@ -56,16 +62,27 @@ public class ClosestMatching implements Matching<GpsPoint, MatchingResult> {
         conn.close();
         switch (resList.size()) {
             case 1:
+                resList.get(0).update();
                 return resList.get(0);
             case 2:
-                return judgeBias(resList.get(0)) ? resList.get(0) : resList.get(1);
+                if (isRightBias(resList.get(0))) {
+                    resList.get(0).update();
+                    return resList.get(0);
+                } else {
+                    resList.get(1).update();
+                    return resList.get(1);
+                }
             default:
                 return null;
         }
     }
 
-    private static boolean judgeBias(MatchingResult matchingResult) {
-        // todo: 判断点位偏向
-        return false;
+    private static boolean isRightBias(MatchingResult matchingResult) {
+        matchingResult.update();
+        double d1 = GlobalUtil.calDirection(matchingResult.getMatchingSegment());
+        GeometryFactory factory = JTSFactoryFinder.getGeometryFactory();
+        LineString line = factory.createLineString(new Coordinate[]{matchingResult.getMatchingPoint().getCoordinate(), matchingResult.getOriginalPoint().getCoordinate()});
+        double d2 = GlobalUtil.calDirection(line);
+        return (d2 - d1 >= 0 && d2 - d1 < 180) || (d2 + 360 - d1 >= 0 && d2 + 360 - d1 < 180);
     }
 }

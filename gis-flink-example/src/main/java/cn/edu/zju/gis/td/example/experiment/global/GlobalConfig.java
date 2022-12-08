@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
 
 /**
  * @author SUN Katus
@@ -46,15 +47,18 @@ public final class GlobalConfig {
     /**
      * 几何属性
      */
-    public static final int SRID_WGS84 = 4326;
-    public static final int SRID_WGS84_UTM_50N = 32650;
-    public static final CoordinateReferenceSystem CRS_WGS84;
-    public static final CoordinateReferenceSystem CRS_WGS84_UTM_50N;
+    public static final int SRID_WGS84, SRID_WGS84_UTM_50N;
+    public static final CoordinateReferenceSystem CRS_WGS84, CRS_WGS84_UTM_50N;
+    public static final MathTransform TRANSFORM_G2P, TRANSFORM_P2G;
 
     static {
+        SRID_WGS84 = 4326;
+        SRID_WGS84_UTM_50N = 32650;
         try {
             CRS_WGS84 = CRS.decode(String.format("EPSG:%d", SRID_WGS84));
             CRS_WGS84_UTM_50N = CRS.decode(String.format("EPSG:%d", SRID_WGS84_UTM_50N));
+            TRANSFORM_G2P = CRS.findMathTransform(CRS_WGS84, CRS_WGS84_UTM_50N, true);
+            TRANSFORM_P2G = CRS.findMathTransform(CRS_WGS84_UTM_50N, CRS_WGS84, true);
         } catch (FactoryException e) {
             throw new RuntimeException(e);
         }
