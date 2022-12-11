@@ -15,16 +15,27 @@ public final class GlobalConfig {
     /**
      * 数据库
      */
-    public static final HikariConfig PG_DATA_SOURCE_CONFIG;
-    public static final HikariDataSource PG_DATA_SOURCE;
+    public static final HikariDataSource PG_ORI_SOURCE;
+    public static final HikariDataSource PG_GRAPH_SOURCE;
+    public static final HikariDataSource PG_ANA_SOURCE;
 
     static {
-        PG_DATA_SOURCE_CONFIG = new HikariConfig();
-        PG_DATA_SOURCE_CONFIG.setJdbcUrl("jdbc:postgresql://10.79.231.85:5432/graduate_katus");
-        PG_DATA_SOURCE_CONFIG.setDriverClassName("org.postgresql.Driver");
-        PG_DATA_SOURCE_CONFIG.setUsername("postgres");
-//        config.setPassword("");
-        PG_DATA_SOURCE = new HikariDataSource(PG_DATA_SOURCE_CONFIG);
+        HikariConfig pgOriConfig = new HikariConfig(), pgGraphConfig = new HikariConfig(), pgAnaConfig = new HikariConfig();
+        pgOriConfig.setJdbcUrl("jdbc:postgresql://10.79.231.85:5432/graduate_katus");
+        pgOriConfig.setDriverClassName("org.postgresql.Driver");
+        pgOriConfig.setUsername("postgres");
+        pgOriConfig.setPassword("");
+        pgGraphConfig.setJdbcUrl("jdbc:postgresql://10.79.231.84:5432/graduate_katus");
+        pgGraphConfig.setDriverClassName("org.postgresql.Driver");
+        pgGraphConfig.setUsername("postgres");
+        pgGraphConfig.setPassword("");
+        pgAnaConfig.setJdbcUrl("jdbc:postgresql://10.79.231.86:5432/graduate_katus");
+        pgAnaConfig.setDriverClassName("org.postgresql.Driver");
+        pgAnaConfig.setUsername("postgres");
+        pgAnaConfig.setPassword("");
+        PG_ORI_SOURCE = new HikariDataSource(pgOriConfig);
+        PG_GRAPH_SOURCE = new HikariDataSource(pgGraphConfig);
+        PG_ANA_SOURCE = new HikariDataSource(pgAnaConfig);
     }
 
     /**

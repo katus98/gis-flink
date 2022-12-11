@@ -41,4 +41,11 @@ public class GpsPoint {
             this.timestamp = FORMAT2.parse(items[8]).getTime();
         }
     }
+
+    public boolean usefulValueEquals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GpsPoint gpsPoint = (GpsPoint) o;
+        return taxiId == gpsPoint.taxiId && Double.compare(gpsPoint.lon, lon) == 0 && Double.compare(gpsPoint.lat, lat) == 0 && Double.compare(gpsPoint.speed, speed) == 0 && Double.compare(gpsPoint.direct, direct) == 0 && timestamp == gpsPoint.timestamp;
+    }
 }

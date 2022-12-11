@@ -12,6 +12,11 @@ import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
  */
 public class ClosestDirectionAccurateMatching extends ClosestDirectionMatching {
     @Override
+    public String name() {
+        return "closest-direction-accurate-matching";
+    }
+
+    @Override
     protected boolean judgeDirections(MatchingResult matchingResult) {
         matchingResult.update();
         return judgeWithoutCache(matchingResult);

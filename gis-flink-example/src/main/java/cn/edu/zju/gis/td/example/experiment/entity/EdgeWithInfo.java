@@ -27,7 +27,6 @@ public class EdgeWithInfo extends Edge {
     private double maxSpeed;
     private boolean isBridge, isTunnel;
     private int hierarchy;
-    private double length;
     private List<Double> directions;
     private LineString geometry;
 
@@ -48,7 +47,6 @@ public class EdgeWithInfo extends Edge {
         this.isBridge = rs.getBoolean("is_bridge");
         this.isTunnel = rs.getBoolean("is_tunnel");
         this.hierarchy = rs.getInt("hierarchy");
-        this.length = rs.getDouble("length");
         this.directions = rs.getObject("directions", List.class);
         this.geometry = (LineString) GlobalUtil.WKT_READER.read(rs.getString("wkt"));
     }

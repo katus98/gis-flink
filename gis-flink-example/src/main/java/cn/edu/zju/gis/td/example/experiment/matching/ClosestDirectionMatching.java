@@ -2,12 +2,7 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
-import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,25 +29,11 @@ public class ClosestDirectionMatching implements Matching<GpsPoint, MatchingResu
         if (!isCompatible(gpsPoint)) {
             return new ClosestMatching().map(gpsPoint);
         }
-        String sql = String.format("WITH ip AS (SELECT ST_Transform(ST_GeomFromText('POINT(%f %f)', 4326), 32650) AS p)\n" +
-                "SELECT edges_pair_jinhua.*, ST_Distance(geom, ip.p) AS dis, ST_AsText(ST_Transform(ST_ClosestPoint(geom, ip.p), 4326)) as cp\n" +
-                "FROM edges_pair_jinhua, ip\n" +
-                "WHERE ST_Intersects(geom, ST_Buffer(ip.p, 20))\n" +
-                "ORDER BY dis", gpsPoint.getLon(), gpsPoint.getLat());
-        Connection conn = GlobalConfig.PG_DATA_SOURCE.getConnection();
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(sql);
-        List<MatchingResult> resList = new ArrayList<>();
-        while (rs.next()) {
-            resList.add(new MatchingResult(gpsPoint, rs));
-        }
-        rs.close();
-        stmt.close();
-        conn.close();
-        for (MatchingResult matchingResult : resList) {
-            if (judgeDirections(matchingResult)) {
-                matchingResult.update();
-                return matchingResult;
+        List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
+        for (MatchingResult mr : candidates) {
+            if (judgeDirections(mr)) {
+                mr.update();
+                return mr;
             }
         }
         return null;

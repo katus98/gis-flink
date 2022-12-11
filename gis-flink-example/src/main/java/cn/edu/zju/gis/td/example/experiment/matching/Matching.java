@@ -4,13 +4,15 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.MapPartitionFunction;
 import org.apache.flink.util.Collector;
 
+import java.io.IOException;
+
 /**
  * @author SUN Katus
  * @version 1.0, 2022-12-07
  */
 public interface Matching<T, O> extends MapFunction<T, O>, MapPartitionFunction<T, O> {
 
-    boolean isCompatible(T t);
+    boolean isCompatible(T t) throws IOException;
 
     String name();
 

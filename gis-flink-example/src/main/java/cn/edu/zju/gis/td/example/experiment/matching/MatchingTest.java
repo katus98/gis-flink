@@ -8,6 +8,7 @@ import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
@@ -21,6 +22,7 @@ import java.util.Objects;
  */
 public class MatchingTest {
     public static void main(String[] args) throws Exception {
+        GlobalUtil.initialize();
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
         KafkaSource<String> source = KafkaSource.<String>builder()
@@ -32,6 +34,7 @@ public class MatchingTest {
         DataStreamSource<String> resSource = env.fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TOPIC);
         Matching<GpsPoint, MatchingResult> matching = new ClosestMatching();
         resSource.map((MapFunction<String, GpsPoint>) s -> GlobalUtil.JSON_MAPPER.readValue(s, GpsPoint.class))
+                .keyBy((KeySelector<GpsPoint, Integer>) GpsPoint::getTaxiId)
                 .map(matching)
                 .filter(Objects::nonNull)
                 .map(MatchingResult::toString)

@@ -1,9 +1,12 @@
 package cn.edu.zju.gis.td.example.experiment.global;
 
+import cn.edu.zju.gis.td.example.experiment.matching.MatchingSQL;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKTReader;
+
+import java.sql.SQLException;
 
 /**
  * @author SUN Katus
@@ -37,5 +40,9 @@ public final class GlobalUtil {
 
     public static double red2Deg(double red) {
         return red / Math.PI * 180.0;
+    }
+
+    public static void initialize() throws SQLException {
+        MatchingSQL.loadBothIds();
     }
 }

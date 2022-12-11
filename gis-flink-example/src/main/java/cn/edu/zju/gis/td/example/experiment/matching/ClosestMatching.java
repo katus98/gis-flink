@@ -2,17 +2,12 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
-import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,38 +34,23 @@ public class ClosestMatching implements Matching<GpsPoint, MatchingResult> {
         if (!isCompatible(gpsPoint)) {
             return null;
         }
-        String sql = String.format("WITH ip AS (SELECT ST_Transform(ST_GeomFromText('POINT(%f %f)', 4326), 32650) AS p)\n" +
-                "SELECT edges_pair_jinhua.*, ST_Distance(geom, ip.p) AS dis, ST_AsText(ST_Transform(ST_ClosestPoint(geom, ip.p), 4326)) as cp\n" +
-                "FROM edges_pair_jinhua, ip\n" +
-                "WHERE ST_Intersects(geom, ST_Buffer(ip.p, 20))\n" +
-                "ORDER BY dis\n" +
-                "LIMIT 2", gpsPoint.getLon(), gpsPoint.getLat());
-        Connection conn = GlobalConfig.PG_DATA_SOURCE.getConnection();
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(sql);
-        List<MatchingResult> resList = new ArrayList<>();
-        while (rs.next()) {
-            MatchingResult matchingResult = new MatchingResult(gpsPoint, rs);
-            if (matchingResult.getEdgeWithInfo().isOneway()) {
-                matchingResult.update();
-                return matchingResult;
-            }
-            resList.add(matchingResult);
-        }
-        rs.close();
-        stmt.close();
-        conn.close();
-        switch (resList.size()) {
+        List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint, 2);
+        MatchingResult firstMR = candidates.get(0);
+        switch (candidates.size()) {
             case 1:
-                resList.get(0).update();
-                return resList.get(0);
+                firstMR.update();
+                return firstMR;
             case 2:
-                if (isRightBias(resList.get(0))) {
-                    resList.get(0).update();
-                    return resList.get(0);
+                if (firstMR.getEdgeWithInfo().isOneway()) {
+                    firstMR.update();
+                    return firstMR;
+                }
+                if (isRightBias(firstMR)) {
+                    firstMR.update();
+                    return firstMR;
                 } else {
-                    resList.get(1).update();
-                    return resList.get(1);
+                    candidates.get(1).update();
+                    return candidates.get(1);
                 }
             default:
                 return null;
