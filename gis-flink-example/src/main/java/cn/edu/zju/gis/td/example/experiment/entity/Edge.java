@@ -41,4 +41,8 @@ public class Edge {
             log.debug("{}", "Not has some columns.");
         }
     }
+
+    public double cost() {
+        return length;
+    }
 }

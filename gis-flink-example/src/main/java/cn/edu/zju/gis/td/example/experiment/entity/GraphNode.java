@@ -12,13 +12,13 @@ import lombok.Setter;
 public class GraphNode {
     private long id;
     private boolean visited;
-    private double cumulativeDistance;
-    private long previousId;
+    private double cumulativeCost;
+    private long previousNodeId;
 
     public GraphNode(long id) {
         this.id = id;
         this.visited = false;
-        this.cumulativeDistance = 1.0 * Integer.MAX_VALUE;
-        this.previousId = -1;
+        this.cumulativeCost = 1.0 * Integer.MAX_VALUE;
+        this.previousNodeId = -1;
     }
 }

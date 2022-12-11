@@ -33,7 +33,7 @@ public class MatchingResult {
     private double error;
     private int segmentNo;
     private LineString matchingSegment;
-    private volatile double lengthToNextNode;
+    private volatile double ratioToNextNode;
 
     public MatchingResult(GpsPoint gpsPoint, ResultSet rs) throws SQLException, ParseException, TransformException {
         this.gpsPoint = new GpsPoint();
@@ -42,15 +42,15 @@ public class MatchingResult {
         this.matchingPoint = (Point) GlobalUtil.WKT_READER.read(rs.getString("cp"));
         this.edgeWithInfo = new EdgeWithInfo(rs);
         this.error = rs.getDouble("dis");
-        this.lengthToNextNode = -1;
+        this.ratioToNextNode = -1;
     }
 
     public void update() {
-        if (lengthToNextNode >= 0) {
+        if (ratioToNextNode >= 0) {
             return;
         }
         synchronized (this) {
-            if (lengthToNextNode < 0) {
+            if (ratioToNextNode < 0) {
                 double distance = Integer.MAX_VALUE;
                 GeometryFactory factory = JTSFactoryFinder.getGeometryFactory();
                 LineString edgeL = edgeWithInfo.getGeometry();
@@ -66,7 +66,7 @@ public class MatchingResult {
                 }
                 Coordinate[] coords = Arrays.copyOfRange(coordinates, segmentNo, coordinates.length);
                 coords[0] = matchingPoint.getCoordinate();
-                this.lengthToNextNode = factory.createLineString(coords).getLength();
+                this.ratioToNextNode = factory.createLineString(coords).getLength() / edgeWithInfo.getLength();
             }
         }
     }
