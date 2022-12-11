@@ -100,11 +100,13 @@ public class GraphProcessing {
         }
         Map<Tuple<Double, Double>, Node> map = new HashMap<>();
         for (Node node : nodeList) {
-            if (map.containsKey(new Tuple<>(node.x, node.y))) {
-                node.setNode(true);
-                log.info("Duplicate: ({}, {})", node.x, node.y);
+            Tuple<Double, Double> key = new Tuple<>(node.x, node.y);
+            if (map.containsKey(key)) {
+                Node oriNode = map.get(key);
+                oriNode.setNode(true);
+                log.info("Duplicate: ({}, {}) id: {}, deleteId: {}", node.x, node.y, oriNode.getId(), node.getId());
             } else {
-                map.put(new Tuple<>(node.x, node.y), node);
+                map.put(key, node);
             }
         }
         log.info("{}, {}", nodeList.size(), map.size());
