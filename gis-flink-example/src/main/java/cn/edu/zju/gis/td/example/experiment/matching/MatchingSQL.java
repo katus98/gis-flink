@@ -1,6 +1,5 @@
 package cn.edu.zju.gis.td.example.experiment.matching;
 
-import cn.edu.zju.gis.td.common.collection.Tuple;
 import cn.edu.zju.gis.td.example.experiment.entity.Edge;
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.GraphNode;
@@ -88,19 +87,19 @@ public final class MatchingSQL {
      * 获取空间范围内的所有节点ID
      */
     public static Map<Long, GraphNode> queryNodeIdsWithinRange(Point previousPoint, double radius) throws SQLException {
-        Map<Long, GraphNode> idSet = new HashMap<>();
+        Map<Long, GraphNode> idMap = new LinkedHashMap<>();
         String sql = String.format("SELECT id FROM graph_nodes_jinhua WHERE ST_Intersects(geom, ST_Buffer(ST_SetSRID(ST_Point(%f, %f), %d), %f))",
                 previousPoint.getX(), previousPoint.getY(), GlobalConfig.SRID_WGS84_UTM_50N, radius);
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
-            idSet.put(rs.getLong("id"), null);
+            idMap.put(rs.getLong("id"), null);
         }
         rs.close();
         stmt.close();
         conn.close();
-        return idSet;
+        return idMap;
     }
 
     /**

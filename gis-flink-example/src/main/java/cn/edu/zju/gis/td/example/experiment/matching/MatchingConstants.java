@@ -11,6 +11,7 @@ public final class MatchingConstants {
     public static final int MAX_HALF_ROAD_WIDTH;
     public static final int MATCHING_TOLERANCE;
     public static final int CENTER_POINT_NUMBER;
+    public static final double MAX_COST;
 
     static {
         MAX_DELTA_TIME = 60000L;
@@ -19,5 +20,6 @@ public final class MatchingConstants {
         MAX_HALF_ROAD_WIDTH = 15;
         MATCHING_TOLERANCE = GPS_TOLERANCE + MAX_HALF_ROAD_WIDTH;
         CENTER_POINT_NUMBER = 109306;
+        MAX_COST = 1.0 * Integer.MAX_VALUE;
     }
 }
