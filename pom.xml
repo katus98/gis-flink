@@ -53,6 +53,7 @@
         <jsch.version>0.1.55</jsch.version>
         <trilead-ssh2.version>1.0.0-build222</trilead-ssh2.version>
         <gt.version>28.0</gt.version>
+        <nd4j.version>1.0.0-M2.1</nd4j.version>
     </properties>
 
     <dependencyManagement>
@@ -61,6 +62,11 @@
                 <groupId>org.geotools</groupId>
                 <artifactId>gt-main</artifactId>
                 <version>${gt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.nd4j</groupId>
+                <artifactId>nd4j-native-platform</artifactId>
+                <version>${nd4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.flink</groupId>
