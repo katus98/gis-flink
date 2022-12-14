@@ -1,6 +1,7 @@
 package cn.edu.zju.gis.td.example.experiment.matching;
 
 import cn.edu.zju.gis.td.example.experiment.entity.*;
+import cn.edu.zju.gis.td.example.experiment.global.GraphCalculator;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
@@ -12,15 +13,18 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * 最短路径匹配算法
+ * 选择候选点中与上个匹配点之间路径成本最低的
+ *
  * @author SUN Katus
  * @version 1.0, 2022-12-08
  */
 public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResult> implements Matching<GpsPoint, MatchingResult> {
-    private transient ValueState<MatchingResult> lastMatchingResultState;
+    private transient ValueState<MatchingResult> matchingResultState;
 
     @Override
     public boolean isCompatible(GpsPoint gpsPoint) throws IOException {
-        MatchingResult previousMR = lastMatchingResultState.value();
+        MatchingResult previousMR = matchingResultState.value();
         if (previousMR == null) {
             return false;
         }
@@ -38,10 +42,10 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         MatchingResult mr = null;
         if (!isCompatible(gpsPoint)) {
             mr = new ClosestDirectionAccurateMatching().map(gpsPoint);
-            lastMatchingResultState.update(mr);
+            matchingResultState.update(mr);
             return mr;
         }
-        MatchingResult previousMR = lastMatchingResultState.value();
+        MatchingResult previousMR = matchingResultState.value();
         // 丢弃重复的GPS数据
         if (previousMR.getGpsPoint().usefulValueEquals(gpsPoint)) {
             return null;
@@ -56,75 +60,13 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         Set<Long> edgeIds = MatchingSQL.queryEdgeIdsWithinRange(previousMR.getMatchingPoint(), radius);
         // 获取范围内的所有节点ID
         Map<Long, GraphNode> nodeGraphMap = MatchingSQL.queryNodeIdsWithinRange(previousMR.getMatchingPoint(), radius);
-        // 起点是上一个匹配点所在边的终点
-        Edge previousEdge = previousMR.getEdgeWithInfo();
-        long lastStartId = previousEdge.getStartId();
-        long oriStartId = previousEdge.getEndId(), startId = oriStartId;
-        // 初始化数据结构
-        for (Map.Entry<Long, GraphNode> entry : nodeGraphMap.entrySet()) {
-            entry.setValue(new GraphNode(entry.getKey()));
-        }
-        // 设置起点信息
-        GraphNode startGraphNode = nodeGraphMap.get(startId);
-        startGraphNode.setCumulativeCost(previousMR.getRatioToNextNode() * previousEdge.cost());
-        startGraphNode.setVisited(true);
-        // 获取从起点开始的所有边
-        List<Edge> edges = MatchingSQL.acquireAllEdges(startId);
-        boolean isRealNode = MatchingSQL.isRealNode(startId);
-        // 初始化直接与起点相连的信息
-        for (Edge edge : edges) {
-            long endId = edge.getEndId();
-            // 仅处理范围内的边和节点
-            if (edgeIds.contains(edge.getId()) && nodeGraphMap.containsKey(endId)) {
-                GraphNode graphNode = nodeGraphMap.get(endId);
-                if (isRealNode || lastStartId != endId) {
-                    graphNode.setCumulativeCost(edge.cost() + startGraphNode.getCumulativeCost());
-                    graphNode.setPreviousNodeId(startId);
-                }
-            }
-        }
-        // Dijkstra 最短路径算法
-        int n = nodeGraphMap.size();
-        for (int i = 1; i < n; i++) {
-            double minCost = 1.0 * Integer.MAX_VALUE;
-            for (Map.Entry<Long, GraphNode> entry : nodeGraphMap.entrySet()) {
-                long nodeId = entry.getKey();
-                GraphNode graphNode = entry.getValue();
-                if (!graphNode.isVisited() && graphNode.getCumulativeCost() < minCost) {
-                    minCost = graphNode.getCumulativeCost();
-                    startId = nodeId;
-                }
-            }
-            nodeGraphMap.get(startId).setVisited(true);
-            lastStartId = nodeGraphMap.get(startId).getPreviousNodeId();
-            edges = MatchingSQL.acquireAllEdges(startId);
-            isRealNode = MatchingSQL.isRealNode(startId);
-            // 初始化直接与起点相连的信息
-            for (Edge edge : edges) {
-                long endId = edge.getEndId();
-                // 仅处理范围内的边和节点
-                if (edgeIds.contains(edge.getId()) && nodeGraphMap.containsKey(endId)) {
-                    GraphNode graphNode = nodeGraphMap.get(endId);
-                    if (isRealNode || lastStartId != endId) {
-                        double newCost = edge.cost() + nodeGraphMap.get(startId).getCumulativeCost();
-                        if (graphNode.getCumulativeCost() > newCost) {
-                            graphNode.setCumulativeCost(newCost);
-                            graphNode.setPreviousNodeId(startId);
-                        }
-                    }
-                }
-            }
-        }
+        // 构建图计算器
+        GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);
+        calculator.setStartMR(previousMR);
         // 判断候选点
-        double minCost = 1.0 * Integer.MAX_VALUE;
+        double minCost = MatchingConstants.MAX_COST;
         for (MatchingResult candidate : candidates) {
-            candidate.update();
-            EdgeWithInfo edgeWithInfo = candidate.getEdgeWithInfo();
-            if (edgeWithInfo.getId() == previousEdge.getId()) {
-                mr = candidate;
-                break;
-            }
-            double cost = nodeGraphMap.get(edgeWithInfo.getStartId()).getCumulativeCost() + candidate.getRatioToNextNode() * edgeWithInfo.cost();
+            double cost = calculator.computeCost(candidate);
             if (cost < minCost) {
                 minCost = cost;
                 mr = candidate;
@@ -135,6 +77,6 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
 
     @Override
     public void open(Configuration parameters) throws Exception {
-        this.lastMatchingResultState = getRuntimeContext().getState(new ValueStateDescriptor<>("previous-matching-result", MatchingResult.class));
+        this.matchingResultState = getRuntimeContext().getState(new ValueStateDescriptor<>("matching-result", MatchingResult.class));
     }
 }
