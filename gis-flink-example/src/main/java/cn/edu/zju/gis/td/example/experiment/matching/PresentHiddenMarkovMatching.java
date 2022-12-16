@@ -40,6 +40,12 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
         MatchingResult mr = null;
         // 获取可能的最近匹配点
         List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
+        // 如果当前位置不存在匹配点
+        if (candidates.isEmpty()) {
+            candidatesState.update(Collections.emptyList());
+            filterProbabilitiesState.update(new double[0]);
+            return null;
+        }
         // 计算发射概率
         double[] errors = new double[candidates.size()];
         for (int i = 0; i < candidates.size(); i++) {
@@ -57,7 +63,7 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
                 }
             }
             // 更新状态
-            candidatesState.update(Collections.singletonList(mr));
+            candidatesState.update(candidates);
             filterProbabilitiesState.update(eqs);
             return mr;
         }
@@ -68,10 +74,6 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
         }
         double[] fps = filterProbabilitiesState.value();
         GpsPoint previousGPS = previousCandidates.get(0).getGpsPoint();
-        // 丢弃重复的GPS数据
-        if (previousGPS.usefulValueEquals(gpsPoint)) {
-            return null;
-        }
         // 计算与上一次匹配点的间隔时间
         long deltaTime = gpsPoint.getTimestamp() - previousGPS.getTimestamp();
         // 计算时间间隔内的最大可能通行范围
@@ -82,7 +84,7 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
         Map<Long, GraphNode> nodeGraphMap = MatchingSQL.queryNodeIdsWithinRange(previousCandidates.get(0).getOriginalPoint(), radius);
         // 构建图计算器
         GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);
-        // 计算转移矩阵
+        // 计算路径距离与直线距离差值矩阵
         double[][] dts = new double[candidates.size()][previousCandidates.size()];
         for (int i = 0; i < previousCandidates.size(); i++) {
             MatchingResult previousCandidate = previousCandidates.get(i);
@@ -92,6 +94,7 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
                 dts[j][i] = Math.abs(calculator.computeStraightDistance(candidate) - calculator.computeCost(candidate));
             }
         }
+        // 计算转移概率
         double[][] tps = new double[candidates.size()][];
         for (int i = 0; i < candidates.size(); i++) {
             tps[i] = computeTransitionProbabilities(dts[i]);

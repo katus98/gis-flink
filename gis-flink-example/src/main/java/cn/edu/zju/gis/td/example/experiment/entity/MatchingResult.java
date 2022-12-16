@@ -34,6 +34,7 @@ public class MatchingResult {
     private int segmentNo;
     private LineString matchingSegment;
     private volatile double ratioToNextNode;
+    private MatchingResult previousMR;
 
     public MatchingResult(GpsPoint gpsPoint, ResultSet rs) throws SQLException, ParseException, TransformException {
         this.gpsPoint = new GpsPoint();
@@ -43,6 +44,7 @@ public class MatchingResult {
         this.edgeWithInfo = new EdgeWithInfo(rs);
         this.error = rs.getDouble("dis");
         this.ratioToNextNode = -1;
+        this.previousMR = null;
     }
 
     public void update() {

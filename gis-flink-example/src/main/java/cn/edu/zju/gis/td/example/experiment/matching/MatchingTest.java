@@ -35,7 +35,7 @@ public class MatchingTest {
         Matching<GpsPoint, MatchingResult> matching = new ClosestMatching();
         resSource.map((MapFunction<String, GpsPoint>) s -> GlobalUtil.JSON_MAPPER.readValue(s, GpsPoint.class))
                 .keyBy((KeySelector<GpsPoint, Integer>) GpsPoint::getTaxiId)
-                .map(matching)
+                .flatMap(matching)
                 .filter(Objects::nonNull)
                 .map(MatchingResult::toString)
                 .print();

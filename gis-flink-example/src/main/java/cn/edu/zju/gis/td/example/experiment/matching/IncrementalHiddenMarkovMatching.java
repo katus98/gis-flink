@@ -47,10 +47,6 @@ public class IncrementalHiddenMarkovMatching extends HiddenMarkovMatching {
             return mr;
         }
         MatchingResult previousMR = matchingResultState.value();
-        // 丢弃重复的GPS数据
-        if (previousMR.getGpsPoint().usefulValueEquals(gpsPoint)) {
-            return null;
-        }
         // 计算与上一次匹配点的间隔时间
         long deltaTime = gpsPoint.getTimestamp() - previousMR.getGpsPoint().getTimestamp();
         // 计算时间间隔内的最大可能通行范围
