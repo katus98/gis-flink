@@ -6,6 +6,7 @@ package cn.edu.zju.gis.td.example.experiment.matching;
  */
 public final class MatchingConstants {
     public static final long MAX_DELTA_TIME;
+    public static final long MAX_FILTER_DELTA_TIME;
     public static final double MAX_ALLOW_SPEED;
     public static final int GPS_TOLERANCE;
     public static final int MAX_HALF_ROAD_WIDTH;
@@ -15,6 +16,7 @@ public final class MatchingConstants {
 
     static {
         MAX_DELTA_TIME = 60000L;
+        MAX_FILTER_DELTA_TIME = 3 * MAX_DELTA_TIME;
         MAX_ALLOW_SPEED = 50.0;
         GPS_TOLERANCE = 10;
         MAX_HALF_ROAD_WIDTH = 15;
