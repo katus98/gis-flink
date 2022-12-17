@@ -64,6 +64,11 @@
                 <version>${gt.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-epsg-hsql</artifactId>
+                <version>${gt.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.nd4j</groupId>
                 <artifactId>nd4j-native-platform</artifactId>
                 <version>${nd4j.version}</version>
