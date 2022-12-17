@@ -47,7 +47,7 @@ public class DataGenerator {
         ObjectMapper mapper = new ObjectMapper();
         long count = 0;
         while (it.hasNext()) {
-            GpsPoint point = new GpsPoint(it.next());
+            GpsPoint point = GpsPoint.loadByOri(it.next());
             ProducerRecord<String, String> record = new ProducerRecord<>("taxi-test-0501", 0, point.getTimestamp(), String.valueOf(point.getId()), mapper.writeValueAsString(point));
             Future<RecordMetadata> future = producer.send(record);
             try {

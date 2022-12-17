@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat;
 @Getter
 @Setter
 @ToString
-public class GpsPoint {
+public class GpsPoint implements Comparable<GpsPoint> {
     private static final SimpleDateFormat FORMAT1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"), FORMAT2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private long id;
     private int taxiId;
@@ -25,7 +25,7 @@ public class GpsPoint {
     public GpsPoint() {
     }
 
-    public GpsPoint(String line) throws ParseException {
+    public GpsPoint(String line) {
         String[] items = line.split(",");
         this.id = Long.parseLong(items[0]);
         this.taxiId = Integer.parseInt(items[1]);
@@ -35,11 +35,37 @@ public class GpsPoint {
         this.height = Double.parseDouble(items[5]);
         this.direct = Double.parseDouble(items[6]);
         this.mileage = Double.parseDouble(items[7]);
+        this.timestamp = Long.parseLong(items[8]);
+    }
+
+    public static GpsPoint loadByOri(String line) throws ParseException {
+        GpsPoint gpsPoint = new GpsPoint();
+        String[] items = line.split(",");
+        gpsPoint.id = Long.parseLong(items[0]);
+        gpsPoint.taxiId = Integer.parseInt(items[1]);
+        gpsPoint.lon = Double.parseDouble(items[2]);
+        gpsPoint.lat = Double.parseDouble(items[3]);
+        gpsPoint.speed = Double.parseDouble(items[4]);
+        gpsPoint.height = Double.parseDouble(items[5]);
+        gpsPoint.direct = Double.parseDouble(items[6]);
+        gpsPoint.mileage = Double.parseDouble(items[7]);
         try {
-            this.timestamp = FORMAT1.parse(items[8]).getTime();
+            gpsPoint.timestamp = FORMAT1.parse(items[8]).getTime();
         } catch (ParseException e) {
-            this.timestamp = FORMAT2.parse(items[8]).getTime();
+            gpsPoint.timestamp = FORMAT2.parse(items[8]).getTime();
         }
+        return gpsPoint;
+    }
+
+    public String toLine() {
+        return id + "," + taxiId + "," + lon + "," + lat + "," + speed + "," + height + "," + direct + "," + mileage + "," + timestamp;
+    }
+
+    public boolean posEquals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GpsPoint gpsPoint = (GpsPoint) o;
+        return taxiId == gpsPoint.taxiId && Double.compare(gpsPoint.lon, lon) == 0 && Double.compare(gpsPoint.lat, lat) == 0;
     }
 
     public boolean usefulValueEquals(Object o) {
@@ -47,5 +73,10 @@ public class GpsPoint {
         if (o == null || getClass() != o.getClass()) return false;
         GpsPoint gpsPoint = (GpsPoint) o;
         return taxiId == gpsPoint.taxiId && Double.compare(gpsPoint.lon, lon) == 0 && Double.compare(gpsPoint.lat, lat) == 0 && Double.compare(gpsPoint.speed, speed) == 0 && Double.compare(gpsPoint.direct, direct) == 0 && timestamp == gpsPoint.timestamp;
+    }
+
+    @Override
+    public int compareTo(GpsPoint o) {
+        return Long.compare(this.timestamp, o.timestamp);
     }
 }
