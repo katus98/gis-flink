@@ -39,11 +39,11 @@ public final class MatchingSQL {
      * 获取候选匹配点
      */
     public static List<MatchingResult> queryNearCandidates(GpsPoint gpsPoint, int limit) throws SQLException, TransformException, ParseException {
-        List<MatchingResult> matchingList = new ArrayList<>();
+        List<MatchingResult> matchingList = new LinkedList<>();
         String sql = String.format("WITH ip AS (SELECT ST_Transform(ST_GeomFromText('POINT(%f %f)', %d), %d) AS p)\n" +
-                "SELECT edges_pair_jinhua.*, ST_Distance(geom, ip.p) AS dis, ST_AsText(ST_ClosestPoint(geom, ip.p)) as cp\n" +
-                "FROM edges_pair_jinhua, ip\n" +
-                "WHERE ST_Intersects(geom, ST_Buffer(ip.p, %d))\n" +
+                "SELECT edges_f_pair.*, ST_Distance(geom, ip.p) AS dis, ST_AsText(ST_ClosestPoint(geom, ip.p)) as cp\n" +
+                "FROM edges_f_pair, ip\n" +
+                "WHERE ST_DWithin(geom, ip.p, %d)\n" +
                 "ORDER BY dis", gpsPoint.getLon(), gpsPoint.getLat(), GlobalConfig.SRID_WGS84, GlobalConfig.SRID_WGS84_UTM_50N, MatchingConstants.MATCHING_TOLERANCE);
         if (limit > 0) {
             sql = sql + " LIMIT " + limit;
@@ -69,7 +69,7 @@ public final class MatchingSQL {
      */
     public static Set<Long> queryEdgeIdsWithinRange(Point previousPoint, double radius) throws SQLException {
         Set<Long> idSet = new HashSet<>();
-        String sql = String.format("SELECT id FROM edges_pair_jinhua WHERE ST_Intersects(geom, ST_Buffer(ST_SetSRID(ST_Point(%f, %f), %d), %f))",
+        String sql = String.format("SELECT id FROM graph_edges_jinhua WHERE ST_Intersects(geom, ST_Buffer(ST_SetSRID(ST_Point(%f, %f), %d), %f))",
                 previousPoint.getX(), previousPoint.getY(), GlobalConfig.SRID_WGS84_UTM_50N, radius);
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
