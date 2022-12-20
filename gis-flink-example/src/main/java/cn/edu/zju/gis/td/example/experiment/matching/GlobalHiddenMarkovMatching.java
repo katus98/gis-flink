@@ -48,34 +48,43 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
         GpsPoint previousGPS = null;
         // 当前的route终点集合
         List<MatchingResult> routeList = new ArrayList<>();
+        // 统计匹配数量
+        long count = 0L;
         for (GpsPoint gpsPoint : gpsPoints) {
-            // 获取可能的最近匹配点
+            // 获取可能的候选点
             List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
-            // 如果当前位置不存在匹配点
+
+            // 如果当前位置不存在匹配点, 短路
             if (candidates.isEmpty()) {
                 if (finalMR != null) {
                     // 中断route, 重置状态变量
-                    routeList.add(finalMR);
                     finalMR = null;
                     previousCandidates = null;
                     previousFqs = null;
                     previousGPS = null;
                 }
+                log.info("Index {} point have bean deleted!", count++);
                 continue;
             }
+
             // 计算发射概率
             double[] errors = new double[candidates.size()];
             for (int i = 0; i < candidates.size(); i++) {
                 errors[i] = candidates.get(i).getError();
             }
             double[] eqs = computeEmissionProbabilities(errors);
+            log.info("Index: {}, EQS: {}", count, Arrays.toString(eqs));
+
             if (finalMR == null || gpsPoint.getTimestamp() - previousGPS.getTimestamp() > MatchingConstants.MAX_DELTA_TIME) {   // 如果当前位置是一条route的起点
                 // 将发射概率视作过滤概率
-                double maxP = 0;
+                double maxP = 0.0;
+                finalMR = candidates.get(0);
                 for (int i = 0; i < candidates.size(); i++) {
+                    MatchingResult candidate = candidates.get(i);
+                    candidate.setRouteStart(true);
                     if (maxP < eqs[i]) {
                         maxP = eqs[i];
-                        finalMR = candidates.get(i);
+                        finalMR = candidate;
                     }
                 }
                 // 更新状态
@@ -89,15 +98,18 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                 Set<Long> edgeIds = MatchingSQL.queryEdgeIdsWithinRange(previousCandidates.get(0).getOriginalPoint(), radius);
                 // 获取范围内的所有节点ID
                 Map<Long, GraphNode> nodeGraphMap = MatchingSQL.queryNodeIdsWithinRange(previousCandidates.get(0).getOriginalPoint(), radius);
+
                 // 构建图计算器
                 GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);
                 // 计算路径距离与直线距离差值矩阵
                 double[][] dts = new double[candidates.size()][previousCandidates.size()];
                 for (int i = 0; i < previousCandidates.size(); i++) {
                     MatchingResult previousCandidate = previousCandidates.get(i);
+                    // 防止一个都没有
+                    nodeGraphMap.put(previousCandidate.getEdgeWithInfo().getEndId(), null);
                     calculator.setStartMR(previousCandidate);
                     for (int j = 0; j < candidates.size(); j++) {
-                        MatchingResult candidate = candidates.get(i);
+                        MatchingResult candidate = candidates.get(j);
                         dts[j][i] = Math.abs(calculator.computeStraightDistance(candidate) - calculator.computeCost(candidate));
                     }
                 }
@@ -106,39 +118,74 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                 for (int i = 0; i < candidates.size(); i++) {
                     tps[i] = computeTransitionProbabilities(dts[i]);
                 }
+
                 // 增量计算过滤概率
                 double[] filterPs = new double[candidates.size()];
+                boolean allZero = true;
                 for (int i = 0; i < candidates.size(); i++) {
                     MatchingResult candidate = candidates.get(i);
-                    double maxTp = 0.0;
+                    double maxTFp = 0.0;
                     for (int j = 0; j < previousCandidates.size(); j++) {
-                        if (maxTp < tps[i][j]) {
-                            maxTp = tps[i][j];
+                        if (maxTFp < tps[i][j] * previousFqs[j]) {
+                            maxTFp = tps[i][j] * previousFqs[j];
                             candidate.setPreviousMR(previousCandidates.get(j));
                         }
                     }
-                    filterPs[i] = previousFqs[i] * maxTp * eqs[i];
-                }
-                // 获取过滤概率最高的候选点
-                double maxP = 0;
-                for (int i = 0; i < candidates.size(); i++) {
-                    if (filterPs[i] > maxP) {
-                        maxP = filterPs[i];
-                        finalMR = candidates.get(i);
+                    filterPs[i] = maxTFp * eqs[i];
+                    if (filterPs[i] > 0.0) {
+                        allZero = false;
                     }
                 }
+                // 如果过滤概率全为0, 将发射概率视作过滤概率
+                if (allZero) {
+                    filterPs = eqs;
+                }
+                // 获取过滤概率最高的候选点
+                double maxP = 0.0;
+                int validCount = 0;
+                finalMR = candidates.get(0);
+                for (int i = 0; i < candidates.size(); i++) {
+                    MatchingResult candidate = candidates.get(i);
+                    if (allZero) {
+                        candidate.setRouteStart(true);
+                    }
+                    if (filterPs[i] > 0) {
+                        validCount++;
+                    }
+                    if (filterPs[i] > maxP) {
+                        maxP = filterPs[i];
+                        finalMR = candidate;
+                    }
+                }
+
                 // 更新变量状态
-                previousFqs = filterPs;
+                previousFqs = new double[validCount];
+                int fi = 0;
+                for (int i = 0; i < filterPs.length; i++) {
+                    if (filterPs[i] > 0) {
+                        // 将过滤概率等比扩大防止精度不足导致的损失
+                        previousFqs[fi++] = filterPs[i] * (1 / maxP);
+                    } else {
+                        // 移除过滤概率为0的候选点, 减少后续运算压力
+                        candidates.remove(i - (filterPs.length - candidates.size()));
+                    }
+                }
             }
+            log.info("Index: {}, FQS: {}", count, Arrays.toString(previousFqs));
             previousCandidates = candidates;
             previousGPS = gpsPoint;
-        }
-        if ((routeList.isEmpty() && finalMR != null) || routeList.get(routeList.size() - 1) != finalMR) {
-            routeList.add(finalMR);
+            if (finalMR != null) {
+                if (finalMR.isRouteStart()) {
+                    routeList.add(finalMR);
+                } else {
+                    routeList.set(routeList.size() - 1, finalMR);
+                }
+            }
+            log.info("{}/{} points have finished!", ++count, gpsPoints.size());
         }
         List<MatchingResult> resList = new LinkedList<>();
         for (MatchingResult mr : routeList) {
-            int index = routeList.size();
+            int index = resList.size();
             MatchingResult ptr = mr;
             while (ptr != null) {
                 resList.add(index, ptr);
