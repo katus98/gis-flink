@@ -1,9 +1,6 @@
 package cn.edu.zju.gis.td.example.experiment.matching;
 
-import cn.edu.zju.gis.td.example.experiment.entity.Edge;
-import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
-import cn.edu.zju.gis.td.example.experiment.entity.GraphNode;
-import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
+import cn.edu.zju.gis.td.example.experiment.entity.*;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
@@ -48,16 +45,28 @@ public final class MatchingSQL {
         if (limit > 0) {
             sql = sql + " LIMIT " + limit;
         }
+        Map<String, Boolean> osmFilterMap = new HashMap<>();
         Connection conn = GlobalConfig.PG_ORI_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
             MatchingResult mr = new MatchingResult(gpsPoint, rs);
-            if (mr.getEdgeWithInfo().isTunnel()) {
-                // 直接排除隧道类型的道路参与候选
+            EdgeWithInfo edgeWithInfo = mr.getEdgeWithInfo();
+            // 直接排除隧道类型的道路参与候选
+            if (edgeWithInfo.isTunnel()) {
                 continue;
             }
-            matchingList.add(mr);
+            // 同一个OSM ID表示的单行路段只允许占据一个匹配位, 双行道则仅允许两个
+            String osmId = edgeWithInfo.getOsmId();
+            if (osmFilterMap.containsKey(osmId)) {
+                if (osmFilterMap.get(osmId)) {
+                    osmFilterMap.put(osmId, false);
+                    matchingList.add(mr);
+                }
+            } else {
+                osmFilterMap.put(osmId, !edgeWithInfo.isOneway());
+                matchingList.add(mr);
+            }
         }
         rs.close();
         stmt.close();
