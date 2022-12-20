@@ -52,7 +52,12 @@ public final class MatchingSQL {
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
         while (rs.next()) {
-            matchingList.add(new MatchingResult(gpsPoint, rs));
+            MatchingResult mr = new MatchingResult(gpsPoint, rs);
+            if (mr.getEdgeWithInfo().isTunnel()) {
+                // 直接排除隧道类型的道路参与候选
+                continue;
+            }
+            matchingList.add(mr);
         }
         rs.close();
         stmt.close();
