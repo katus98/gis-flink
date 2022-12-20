@@ -1,9 +1,13 @@
 package cn.edu.zju.gis.td.example.experiment.matching;
 
+import cn.edu.zju.gis.td.common.io.FsManipulator;
+import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
+import cn.edu.zju.gis.td.common.io.LineIterator;
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -13,16 +17,27 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.locationtech.jts.io.ParseException;
+import org.opengis.referencing.operation.TransformException;
 
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
  * @author SUN Katus
  * @version 1.0, 2022-12-07
  */
+@Slf4j
 public class MatchingTest {
     public static void main(String[] args) throws Exception {
         GlobalUtil.initialize();
+        matchingGlobal();
+    }
+
+    private static void matchingStream() throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
         KafkaSource<String> source = KafkaSource.<String>builder()
@@ -41,5 +56,28 @@ public class MatchingTest {
                 .map(MatchingResult::toString)
                 .print();
         env.execute(matching.name());
+    }
+
+    private static void matchingGlobal() throws IOException, SQLException, TransformException, ParseException {
+        FsManipulator fsManipulator = FsManipulatorFactory.create();
+        String[] filenames = fsManipulator.list("F:\\data\\graduation\\gpsFilter");
+        for (String filename : filenames) {
+            String name = filename.substring(filename.lastIndexOf("\\") + 1);
+            log.info("START: {} ------", name);
+            LineIterator it = fsManipulator.getLineIterator(filename);
+            List<GpsPoint> gpsList = new ArrayList<>();
+            while (it.hasNext()) {
+                gpsList.add(new GpsPoint(it.next()));
+            }
+            GlobalHiddenMarkovMatching globalHiddenMarkovMatching = new GlobalHiddenMarkovMatching();
+            List<MatchingResult> resultList = globalHiddenMarkovMatching.match(gpsList);
+            List<String> contents = new ArrayList<>();
+            contents.add(MatchingResult.matchingTitle());
+            for (MatchingResult matchingResult : resultList) {
+                contents.add(matchingResult.toMatchingLine());
+            }
+            fsManipulator.writeTextToFile("F:\\data\\graduation\\globalMR\\" + name, contents);
+            log.info("FINISH: {} ------", name);
+        }
     }
 }
