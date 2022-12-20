@@ -35,16 +35,27 @@ public class MatchingResult {
     private LineString matchingSegment;
     private volatile double ratioToNextNode;
     private MatchingResult previousMR;
+    private boolean routeStart;
 
     public MatchingResult(GpsPoint gpsPoint, ResultSet rs) throws SQLException, ParseException, TransformException {
-        this.gpsPoint = new GpsPoint();
+        this.gpsPoint = gpsPoint;
         GeometryFactory factory = JTSFactoryFinder.getGeometryFactory();
-        this.originalPoint = (Point) JTS.transform(factory.createPoint(new Coordinate(gpsPoint.getLon(), gpsPoint.getLat())), GlobalConfig.TRANSFORM_G2P);
+        this.originalPoint = (Point) JTS.transform(factory.createPoint(new Coordinate(gpsPoint.getLat(), gpsPoint.getLon())), GlobalConfig.TRANSFORM_G2P);
         this.matchingPoint = (Point) GlobalUtil.WKT_READER.read(rs.getString("cp"));
         this.edgeWithInfo = new EdgeWithInfo(rs);
         this.error = rs.getDouble("dis");
         this.ratioToNextNode = -1;
         this.previousMR = null;
+        this.routeStart = false;
+    }
+
+    public static String matchingTitle() {
+        return GpsPoint.title() + ",edgeId,oriX,oriY,matX,matY,routeStart";
+    }
+
+    public String toMatchingLine() {
+        return gpsPoint.toLine() + "," + edgeWithInfo.getId() + "," + originalPoint.getX() + "," + originalPoint.getY()
+                + "," + matchingPoint.getX() + "," + matchingPoint.getY() + "," + routeStart;
     }
 
     public void update() {

@@ -47,7 +47,13 @@ public class EdgeWithInfo extends Edge {
         this.isBridge = rs.getBoolean("is_bridge");
         this.isTunnel = rs.getBoolean("is_tunnel");
         this.hierarchy = rs.getInt("hierarchy");
-        this.directions = rs.getObject("directions", List.class);
+        this.directions = new ArrayList<>();
+        String dirStr = rs.getString("directions");
+        dirStr = dirStr.substring(1, dirStr.length() - 1);
+        String[] items = dirStr.split(",");
+        for (String item : items) {
+            directions.add(Double.parseDouble(item));
+        }
         this.geometry = (LineString) GlobalUtil.WKT_READER.read(rs.getString("wkt"));
     }
 }

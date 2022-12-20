@@ -57,6 +57,10 @@ public class GpsPoint implements Comparable<GpsPoint> {
         return gpsPoint;
     }
 
+    public static String title() {
+        return "id,taxiId,lon,lat,speed,height,direct,mileage,timestamp";
+    }
+
     public String toLine() {
         return id + "," + taxiId + "," + lon + "," + lat + "," + speed + "," + height + "," + direct + "," + mileage + "," + timestamp;
     }
