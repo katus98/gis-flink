@@ -4,6 +4,7 @@ import cn.edu.zju.gis.td.example.experiment.entity.Edge;
 import cn.edu.zju.gis.td.example.experiment.entity.EdgeWithInfo;
 import cn.edu.zju.gis.td.example.experiment.entity.GraphNode;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
+import cn.edu.zju.gis.td.example.experiment.matching.MatchingConstants;
 import cn.edu.zju.gis.td.example.experiment.matching.MatchingSQL;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,6 +58,7 @@ public class GraphCalculator {
     }
 
     public void setStartMR(MatchingResult startMR) {
+        startMR.update();
         this.startMR = startMR;
         this.isFinished = false;
     }
@@ -68,7 +70,7 @@ public class GraphCalculator {
         if (edgeWithInfo.getId() == getStartEdgeId()) {
             return fixCost((startMR.getRatioToNextNode() - endMR.getRatioToNextNode()) * edgeWithInfo.cost());
         }
-        return nodeGraphMap.get(edgeWithInfo.getStartId()).getCumulativeCost() + (1 - endMR.getRatioToNextNode()) * edgeWithInfo.cost();
+        return nodeGraphMap.containsKey(edgeWithInfo.getStartId()) ? nodeGraphMap.get(edgeWithInfo.getStartId()).getCumulativeCost() + (1 - endMR.getRatioToNextNode()) * edgeWithInfo.cost() : MatchingConstants.MAX_COST;
     }
 
     public double computeStraightDistance(MatchingResult endMR) {
@@ -117,7 +119,7 @@ public class GraphCalculator {
                     // Dijkstra 最短路径算法
                     int n = nodeGraphMap.size();
                     for (int i = 1; i < n; i++) {
-                        double minCost = 1.0 * Integer.MAX_VALUE;
+                        double minCost = MatchingConstants.MAX_COST;
                         for (Map.Entry<Long, GraphNode> entry : nodeGraphMap.entrySet()) {
                             long nodeId = entry.getKey();
                             GraphNode graphNode = entry.getValue();
