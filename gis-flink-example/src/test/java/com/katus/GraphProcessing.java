@@ -26,11 +26,11 @@ public class GraphProcessing {
 //        log.info("{}", checkNumber("F:\\data\\graduation\\graph\\nodes_real.csv", true, 2, 3));
 //        log.info("{}", checkMulti("F:\\data\\graduation\\graph\\edges_ori_f.csv", true));
         generate(new String[]{
-                "F:\\data\\graduation\\graph\\edges_ori_f.csv",
-                "F:\\data\\graduation\\graph\\center_points.csv",
-                "F:\\data\\graduation\\graph\\nodes_real.csv",
-                "F:\\data\\graduation\\graph\\edges_jinhua_pair_2.tsv",
-                "F:\\data\\graduation\\graph\\nodes_jinhua_pair_2.tsv"
+                "F:\\data\\graduation\\graph\\edges_f_ori.csv",
+                "F:\\data\\graduation\\graph\\cp_f.csv",
+                "F:\\data\\graduation\\graph\\real_nodes_f.csv",
+                "F:\\data\\graduation\\graph\\edges_f_pair.tsv",
+                "F:\\data\\graduation\\graph\\nodes_f.tsv"
         }, true, true);
     }
 
@@ -198,9 +198,9 @@ public class GraphProcessing {
             node.setNode(false);
             node.setCenter(true);
             node.setWkt(items[0].substring(1, items[0].length() - 1));
-            node.setLength(Double.parseDouble(items[15]));
-            node.setX(Double.parseDouble(items[16]));
-            node.setY(Double.parseDouble(items[17]));
+            node.setLength(Double.parseDouble(items[14]));
+            node.setX(Double.parseDouble(items[15]));
+            node.setY(Double.parseDouble(items[16]));
             return node;
         }
 
@@ -297,10 +297,10 @@ public class GraphProcessing {
             edge.setNewName(items[7]);
             edge.setNewRef(items[8]);
             edge.setMaxSpeed(Double.parseDouble(items[10]));
-            edge.setBridge(items[12].equals("T"));
-            edge.setTunnel(items[13].equals("T"));
-            edge.setHierarchy(Integer.parseInt(items[14]));
-            edge.setLength(Double.parseDouble(items[15]));
+            edge.setBridge(items[11].equals("T"));
+            edge.setTunnel(items[12].equals("T"));
+            edge.setHierarchy(Integer.parseInt(items[13]));
+            edge.setLength(Double.parseDouble(items[14]));
             edge.setOneway(!"B".equals(items[9]));
             refactorWkt(edge, items[9]);
             return edge;
