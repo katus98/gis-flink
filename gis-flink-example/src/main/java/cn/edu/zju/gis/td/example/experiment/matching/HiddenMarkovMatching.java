@@ -35,16 +35,16 @@ public abstract class HiddenMarkovMatching extends RichFlatMapFunction<GpsPoint,
 
     protected double[] computeEmissionProbabilities(double[] errors) {
         double[] eps = new double[errors.length];
-        double sigma = 1.4826 * median(errors);
+//        double sigma = 1.4826 * median(errors);
         for (int i = 0; i < eps.length; i++) {
-            eps[i] = emissionProbability(errors[i], sigma);
+            eps[i] = emissionProbability(errors[i], MatchingConstants.DIS_STANDARD_DEVIATION);
         }
         return eps;
     }
 
     protected double[] computeTransitionProbabilities(double[] dts) {
         double[] tps = new double[dts.length];
-        double beta = 1 / Math.log(2) * median(dts);
+        double beta = 1 / Math.log(2) * Math.max(median(dts), 1.0);
         for (int i = 0; i < tps.length; i++) {
             tps[i] = transitionProbability(dts[i], beta);
         }
@@ -59,9 +59,35 @@ public abstract class HiddenMarkovMatching extends RichFlatMapFunction<GpsPoint,
         return 1.0 / beta * Math.pow(Math.E, -dt / beta);
     }
 
+    private double average(double[] array) {
+        double avg = 0.0;
+        int count = 0;
+        for (double v : array) {
+            if (v < MatchingConstants.MAX_COST / 10) {
+                avg += v;
+                count++;
+            }
+        }
+        return count == 0 ? 0.0 : avg / count;
+    }
+
     private double median(double[] array) {
-        double[] nArray = Arrays.copyOf(array, array.length);
+        int c = 0;
+        for (double v : array) {
+            if (v < MatchingConstants.MAX_COST / 10) {
+                c++;
+            }
+        }
+        double[] nArray = new double[c];
+        c = 0;
+        for (double v : array) {
+            if (v < MatchingConstants.MAX_COST / 10) {
+                nArray[c++] = v;
+            }
+        }
         Arrays.sort(nArray);
-        return array.length % 2 == 1 ? nArray[(array.length - 1) / 2] : (nArray[array.length / 2 - 1] + nArray[array.length / 2]) / 2.0;
+        c = nArray.length;
+        if (c == 0) return 0;
+        return c % 2 == 1 ? nArray[(c - 1) / 2] : (nArray[c / 2 - 1] + nArray[c / 2]) / 2.0;
     }
 }
