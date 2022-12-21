@@ -21,11 +21,13 @@ import java.util.Arrays;
 public abstract class HiddenMarkovMatching extends RichFlatMapFunction<GpsPoint, MatchingResult> implements Matching<GpsPoint, MatchingResult> {
     protected transient ListState<MatchingResult> candidatesState;
     protected transient ValueState<double[]> filterProbabilitiesState;
+    protected transient ValueState<GpsPoint> gpsPointState;
 
     @Override
     public void open(Configuration parameters) throws Exception {
         this.candidatesState = getRuntimeContext().getListState(new ListStateDescriptor<>("candidates", MatchingResult.class));
         this.filterProbabilitiesState = getRuntimeContext().getState(new ValueStateDescriptor<>("filter-probabilities", double[].class));
+        this.gpsPointState = getRuntimeContext().getState(new ValueStateDescriptor<>("gps-point", GpsPoint.class));
     }
 
     @Override

@@ -52,9 +52,8 @@ public class ClosestMatching implements Matching<GpsPoint, MatchingResult> {
                     candidates.get(1).update();
                     return candidates.get(1);
                 }
-            default:
-                return null;
         }
+        return null;
     }
 
     private static boolean isRightBias(MatchingResult matchingResult) {

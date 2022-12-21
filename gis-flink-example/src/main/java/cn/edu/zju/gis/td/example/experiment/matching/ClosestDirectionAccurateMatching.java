@@ -11,6 +11,16 @@ import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
  * @version 1.0, 2022-12-08
  */
 public class ClosestDirectionAccurateMatching extends ClosestDirectionMatching {
+    private final DirectionMatchingType type;
+
+    public ClosestDirectionAccurateMatching(DirectionMatchingType type) {
+        this.type = type;
+    }
+
+    public ClosestDirectionAccurateMatching() {
+        this(DirectionMatchingType.CALCULATING);
+    }
+
     @Override
     public String name() {
         return "closest-direction-accurate-matching";
@@ -19,7 +29,7 @@ public class ClosestDirectionAccurateMatching extends ClosestDirectionMatching {
     @Override
     protected boolean judgeDirections(MatchingResult matchingResult) {
         matchingResult.update();
-        return judgeWithoutCache(matchingResult);
+        return DirectionMatchingType.USING_CACHE.equals(type) ? judgeWithCache(matchingResult) : judgeWithoutCache(matchingResult);
     }
 
     private boolean judgeWithCache(MatchingResult matchingResult) {
@@ -28,5 +38,10 @@ public class ClosestDirectionAccurateMatching extends ClosestDirectionMatching {
 
     private boolean judgeWithoutCache(MatchingResult matchingResult) {
         return judgeDirection(matchingResult.getGpsPoint().getDirect(), GlobalUtil.calDirection(matchingResult.getMatchingSegment()));
+    }
+
+    public enum DirectionMatchingType {
+        USING_CACHE,
+        CALCULATING
     }
 }

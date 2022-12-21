@@ -22,9 +22,8 @@ import org.opengis.referencing.operation.TransformException;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author SUN Katus
@@ -53,7 +52,7 @@ public class MatchingTest {
                 .filter(new GpsPointFilter())
                 .flatMap(matching)
                 .filter(Objects::nonNull)
-                .map(MatchingResult::toString)
+                .map(MatchingResult::toMatchingLine)
                 .print();
         env.execute(matching.name());
     }
@@ -61,8 +60,14 @@ public class MatchingTest {
     private static void matchingGlobal() throws IOException, SQLException, TransformException, ParseException {
         FsManipulator fsManipulator = FsManipulatorFactory.create();
         String[] filenames = fsManipulator.list("F:\\data\\graduation\\gpsFilter");
+        String outPath = "F:\\data\\graduation\\globalMR\\";
+        Set<String> outFilenameSet = Arrays.stream(fsManipulator.list(outPath)).collect(Collectors.toSet());
         for (String filename : filenames) {
             String name = filename.substring(filename.lastIndexOf("\\") + 1);
+            if (outFilenameSet.contains(outPath + name)) {
+                log.info("SKIP: {} ------", name);
+                continue;
+            }
             log.info("START: {} ------", name);
             LineIterator it = fsManipulator.getLineIterator(filename);
             List<GpsPoint> gpsList = new ArrayList<>();
@@ -76,8 +81,9 @@ public class MatchingTest {
             for (MatchingResult matchingResult : resultList) {
                 contents.add(matchingResult.toMatchingLine());
             }
-            fsManipulator.writeTextToFile("F:\\data\\graduation\\globalMR\\" + name, contents);
+            fsManipulator.writeTextToFile(outPath + name, contents);
             log.info("FINISH: {} ------", name);
         }
+        log.info("ALL FINISHED!");
     }
 }

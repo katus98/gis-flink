@@ -40,11 +40,13 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
     @Override
     public MatchingResult map(GpsPoint gpsPoint) throws Exception {
         MatchingResult mr = null;
+        // 如果当前位置是一条route的起点
         if (!isCompatible(gpsPoint)) {
             mr = new ClosestDirectionAccurateMatching().map(gpsPoint);
             matchingResultState.update(mr);
             return mr;
         }
+        // 获取状态值
         MatchingResult previousMR = matchingResultState.value();
         // 计算与上一次匹配点的间隔时间
         long deltaTime = gpsPoint.getTimestamp() - previousMR.getGpsPoint().getTimestamp();
@@ -59,6 +61,8 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         // 构建图计算器
         GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);
         calculator.setStartMR(previousMR);
+        // 防止一个都没有
+        nodeGraphMap.put(previousMR.getEdgeWithInfo().getEndId(), null);
         // 判断候选点
         double minCost = MatchingConstants.MAX_COST;
         for (MatchingResult candidate : candidates) {

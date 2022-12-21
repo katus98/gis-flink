@@ -43,7 +43,7 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
         // 前一个位置的候选点
         List<MatchingResult> previousCandidates = null;
         // 前一个位置的过滤概率
-        double[] previousFqs = null;
+        double[] previousFps = null;
         // 前一个GPS点
         GpsPoint previousGPS = null;
         // 当前的route终点集合
@@ -60,7 +60,7 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                     // 中断route, 重置状态变量
                     finalMR = null;
                     previousCandidates = null;
-                    previousFqs = null;
+                    previousFps = null;
                     previousGPS = null;
                 }
                 log.info("Index {} point have bean deleted!", count++);
@@ -72,8 +72,8 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
             for (int i = 0; i < candidates.size(); i++) {
                 errors[i] = candidates.get(i).getError();
             }
-            double[] eqs = computeEmissionProbabilities(errors);
-            log.info("Index: {}, EQS: {}", count, Arrays.toString(eqs));
+            double[] eps = computeEmissionProbabilities(errors);
+            log.info("Index: {}, EPS: {}", count, Arrays.toString(eps));
 
             if (finalMR == null || gpsPoint.getTimestamp() - previousGPS.getTimestamp() > MatchingConstants.MAX_DELTA_TIME) {   // 如果当前位置是一条route的起点
                 // 将发射概率视作过滤概率
@@ -82,13 +82,13 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                 for (int i = 0; i < candidates.size(); i++) {
                     MatchingResult candidate = candidates.get(i);
                     candidate.setRouteStart(true);
-                    if (maxP < eqs[i]) {
-                        maxP = eqs[i];
+                    if (maxP < eps[i]) {
+                        maxP = eps[i];
                         finalMR = candidate;
                     }
                 }
                 // 更新状态
-                previousFqs = eqs;
+                previousFps = eps;
             } else {
                 // 计算与上一次匹配点的间隔时间
                 long deltaTime = gpsPoint.getTimestamp() - previousGPS.getTimestamp();
@@ -126,19 +126,19 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                     MatchingResult candidate = candidates.get(i);
                     double maxTFp = 0.0;
                     for (int j = 0; j < previousCandidates.size(); j++) {
-                        if (maxTFp < tps[i][j] * previousFqs[j]) {
-                            maxTFp = tps[i][j] * previousFqs[j];
+                        if (maxTFp < tps[i][j] * previousFps[j]) {
+                            maxTFp = tps[i][j] * previousFps[j];
                             candidate.setPreviousMR(previousCandidates.get(j));
                         }
                     }
-                    filterPs[i] = maxTFp * eqs[i];
+                    filterPs[i] = maxTFp * eps[i];
                     if (filterPs[i] > 0.0) {
                         allZero = false;
                     }
                 }
                 // 如果过滤概率全为0, 将发射概率视作过滤概率
                 if (allZero) {
-                    filterPs = eqs;
+                    filterPs = eps;
                 }
                 // 获取过滤概率最高的候选点
                 double maxP = 0.0;
@@ -159,19 +159,19 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                 }
 
                 // 更新变量状态
-                previousFqs = new double[validCount];
+                previousFps = new double[validCount];
                 int fi = 0;
                 for (int i = 0; i < filterPs.length; i++) {
                     if (filterPs[i] > 0) {
                         // 将过滤概率等比扩大防止精度不足导致的损失
-                        previousFqs[fi++] = filterPs[i] * (1 / maxP);
+                        previousFps[fi++] = filterPs[i] * (1 / maxP);
                     } else {
                         // 移除过滤概率为0的候选点, 减少后续运算压力
                         candidates.remove(i - (filterPs.length - candidates.size()));
                     }
                 }
             }
-            log.info("Index: {}, FQS: {}", count, Arrays.toString(previousFqs));
+            log.info("Index: {}, FPS: {}", count, Arrays.toString(previousFps));
             previousCandidates = candidates;
             previousGPS = gpsPoint;
             if (finalMR != null) {
@@ -181,7 +181,10 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                     routeList.set(routeList.size() - 1, finalMR);
                 }
             }
-            log.info("{}/{} points have finished!", ++count, gpsPoints.size());
+            count++;
+            if (count % 100 == 0) {
+                log.info("{}/{} points have finished!", count, gpsPoints.size());
+            }
         }
         List<MatchingResult> resList = new LinkedList<>();
         for (MatchingResult mr : routeList) {

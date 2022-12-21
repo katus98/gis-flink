@@ -51,6 +51,6 @@ public class ClosestDirectionMatching implements Matching<GpsPoint, MatchingResu
 
     protected boolean judgeDirection(double d1, double d2) {
         double tmp = Math.abs(d1 - d2);
-        return tmp <= 10 || Math.abs(tmp - 360) <= 10;
+        return tmp <= 1.5 * MatchingConstants.DIR_STANDARD_DEVIATION || Math.abs(tmp - 360) <= 1.5 * MatchingConstants.DIR_STANDARD_DEVIATION;
     }
 }
