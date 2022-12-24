@@ -35,12 +35,14 @@ public class ClosestMatching implements Matching<GpsPoint, MatchingResult> {
             return null;
         }
         List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint, 2);
-        MatchingResult firstMR = candidates.get(0);
+        MatchingResult firstMR;
         switch (candidates.size()) {
             case 1:
+                firstMR  = candidates.get(0);
                 firstMR.update();
                 return firstMR;
             case 2:
+                firstMR = candidates.get(0);
                 if (firstMR.getEdgeWithInfo().isOneway()) {
                     firstMR.update();
                     return firstMR;
@@ -56,7 +58,10 @@ public class ClosestMatching implements Matching<GpsPoint, MatchingResult> {
         return null;
     }
 
-    private static boolean isRightBias(MatchingResult matchingResult) {
+    /**
+     * 匹配点是否在道路行进方向的右侧
+     */
+    public static boolean isRightBias(MatchingResult matchingResult) {
         matchingResult.update();
         double d1 = GlobalUtil.calDirection(matchingResult.getMatchingSegment());
         GeometryFactory factory = JTSFactoryFinder.getGeometryFactory();
