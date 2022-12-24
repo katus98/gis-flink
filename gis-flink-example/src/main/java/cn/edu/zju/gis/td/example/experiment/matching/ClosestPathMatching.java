@@ -72,6 +72,7 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
                 mr = candidate;
             }
         }
+        matchingResultState.update(mr);
         return mr;
     }
 
