@@ -18,7 +18,7 @@ public class ClosestDirectionAccurateMatching extends ClosestDirectionMatching {
     }
 
     public ClosestDirectionAccurateMatching() {
-        this(DirectionMatchingType.CALCULATING);
+        this(DirectionMatchingType.USING_CACHE);
     }
 
     @Override

@@ -16,7 +16,7 @@ public class ClosestDirectionMatching implements Matching<GpsPoint, MatchingResu
 
     @Override
     public boolean isCompatible(GpsPoint gpsPoint) {
-        return gpsPoint.getSpeed() != 0.0 && gpsPoint.getDirect() != 0.0;
+        return gpsPoint.getDirect() >= 0.1;
     }
 
     @Override
