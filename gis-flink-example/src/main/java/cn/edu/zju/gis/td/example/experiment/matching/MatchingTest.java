@@ -4,7 +4,9 @@ import cn.edu.zju.gis.td.common.io.FsManipulator;
 import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
 import cn.edu.zju.gis.td.common.io.LineIterator;
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
+import cn.edu.zju.gis.td.example.experiment.entity.GpsPointSerSchema;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
+import cn.edu.zju.gis.td.example.experiment.entity.SerializedData;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +14,6 @@ import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringEncoder;
-import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.connector.kafka.source.KafkaSource;
@@ -51,15 +52,15 @@ public class MatchingTest {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
         // 设置数据源
-        KafkaSource<String> source = KafkaSource.<String>builder()
+        KafkaSource<SerializedData.GpsPointSer> source = KafkaSource.<SerializedData.GpsPointSer>builder()
                 .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
                 .setTopics(GlobalConfig.KAFKA_GPS_TOPIC)
                 .setStartingOffsets(OffsetsInitializer.timestamp(GlobalConfig.TIME_0501))
-                .setValueOnlyDeserializer(new SimpleStringSchema())
+                .setValueOnlyDeserializer(new GpsPointSerSchema())
                 .build();
-        DataStreamSource<String> resSource = env.fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TOPIC);
+        DataStreamSource<SerializedData.GpsPointSer> resSource = env.fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TOPIC);
         // 指定匹配算法类型
-        Matching<GpsPoint, MatchingResult> matching = new CachedPresentHiddenMarkovMatching(MatchingConstants.MAX_QUOTIENT);
+        Matching<GpsPoint, MatchingResult> matching = new CachedPresentHiddenMarkovMatching(10);
         // 设置输出路径
         String outFilename = "F:\\data\\graduation\\matching\\" + matching.name();
         FsManipulator fsManipulator = FsManipulatorFactory.create();
@@ -81,7 +82,7 @@ public class MatchingTest {
                         .build())
                 .build();
         // 流式匹配算法
-        resSource.map((MapFunction<String, GpsPoint>) s -> GlobalUtil.JSON_MAPPER.readValue(s, GpsPoint.class))
+        resSource.map((MapFunction<SerializedData.GpsPointSer, GpsPoint>) GpsPoint::new)
                 .keyBy((KeySelector<GpsPoint, Integer>) GpsPoint::getTaxiId)
                 .flatMap(matching)
                 .filter(Objects::nonNull)

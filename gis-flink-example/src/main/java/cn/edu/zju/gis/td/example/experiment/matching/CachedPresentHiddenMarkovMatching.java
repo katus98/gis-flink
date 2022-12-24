@@ -23,15 +23,17 @@ import java.util.*;
 @Slf4j
 public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatching {
     private transient ValueState<Integer> bestIndexState;
+    private final int magnitudeLevel;
     private final double quotient;
 
-    public CachedPresentHiddenMarkovMatching(double quotient) {
-        this.quotient = quotient;
+    public CachedPresentHiddenMarkovMatching(int magnitudeLevel) {
+        this.magnitudeLevel = magnitudeLevel;
+        this.quotient = Math.pow(10, magnitudeLevel);
     }
 
     @Override
     public String name() {
-        return "cached-present-hidden-markov-matching";
+        return "cached-present-hidden-markov-matching-" + magnitudeLevel;
     }
 
     @Override
