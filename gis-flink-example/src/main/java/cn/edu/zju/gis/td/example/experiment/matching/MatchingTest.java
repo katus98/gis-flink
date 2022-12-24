@@ -11,21 +11,32 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.serialization.SimpleStringEncoder;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.filesystem.OutputFileConfig;
+import org.apache.flink.streaming.api.functions.sink.filesystem.StreamingFileSink;
+import org.apache.flink.streaming.api.functions.sink.filesystem.bucketassigners.DateTimeBucketAssigner;
+import org.apache.flink.streaming.api.functions.sink.filesystem.rollingpolicies.DefaultRollingPolicy;
 import org.locationtech.jts.io.ParseException;
 import org.opengis.referencing.operation.TransformException;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * 地图匹配实验
+ *
  * @author SUN Katus
  * @version 1.0, 2022-12-07
  */
@@ -33,12 +44,13 @@ import java.util.stream.Collectors;
 public class MatchingTest {
     public static void main(String[] args) throws Exception {
         GlobalUtil.initialize();
-        matchingGlobal();
+        matchingStream();
     }
 
     private static void matchingStream() throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+        // 设置数据源
         KafkaSource<String> source = KafkaSource.<String>builder()
                 .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
                 .setTopics(GlobalConfig.KAFKA_GPS_TOPIC)
@@ -46,14 +58,34 @@ public class MatchingTest {
                 .setValueOnlyDeserializer(new SimpleStringSchema())
                 .build();
         DataStreamSource<String> resSource = env.fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TOPIC);
-        Matching<GpsPoint, MatchingResult> matching = new ClosestMatching();
+        // 指定匹配算法类型
+        Matching<GpsPoint, MatchingResult> matching = new CachedPresentHiddenMarkovMatching(MatchingConstants.MAX_QUOTIENT);
+        // 设置输出路径
+        String outFilename = "F:\\data\\graduation\\matching\\" + matching.name();
+        FsManipulator fsManipulator = FsManipulatorFactory.create();
+        if (!fsManipulator.exists(outFilename)) {
+            fsManipulator.makeDirectories(outFilename);
+        }
+        // 设置文件输出
+        StreamingFileSink<MatchingResult> sink = StreamingFileSink
+                .forRowFormat(new Path(outFilename), new SimpleStringEncoder<MatchingResult>())
+                .withBucketAssigner(new DateTimeBucketAssigner<>())
+                .withRollingPolicy(DefaultRollingPolicy.builder()
+                        .withRolloverInterval(Duration.of(10L, ChronoUnit.SECONDS))
+                        .withInactivityInterval(Duration.of(30L, ChronoUnit.SECONDS))
+                        .withMaxPartSize(new MemorySize(1024L * 1024L * 1024L))
+                        .build())
+                .withOutputFileConfig(OutputFileConfig.builder()
+                        .withPartPrefix("mr-")
+                        .withPartSuffix(".csv")
+                        .build())
+                .build();
+        // 流式匹配算法
         resSource.map((MapFunction<String, GpsPoint>) s -> GlobalUtil.JSON_MAPPER.readValue(s, GpsPoint.class))
                 .keyBy((KeySelector<GpsPoint, Integer>) GpsPoint::getTaxiId)
-                .filter(new GpsPointFilter())
                 .flatMap(matching)
                 .filter(Objects::nonNull)
-                .map(MatchingResult::toMatchingLine)
-                .print();
+                .addSink(sink);
         env.execute(matching.name());
     }
 

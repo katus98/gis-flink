@@ -4,6 +4,7 @@ import cn.edu.zju.gis.td.common.io.FsManipulator;
 import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
 import cn.edu.zju.gis.td.common.io.LineIterator;
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
+import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.Callback;
@@ -29,7 +30,7 @@ public class DataGenerator {
 
     private static Properties getKafkaProps() {
         Properties properties = new Properties();
-//        properties.put("bootstrap.servers", "*:9092");
+        properties.put("bootstrap.servers", GlobalConfig.KAFKA_SERVER);
         properties.put("acks", "all");
         properties.put("retries", 0);
         properties.put("batch.size", 16384);
@@ -40,15 +41,15 @@ public class DataGenerator {
         return properties;
     }
 
-    private static void generateTaxiStream(Properties properties) throws IOException, ParseException {
+    private static void generateTaxiStream(Properties properties) throws IOException {
         FsManipulator fsManipulator = FsManipulatorFactory.create();
-        LineIterator it = fsManipulator.getLineIterator("F:\\data\\graduation\\gps_ori\\MDTUpInfo_0501.csv");
+        LineIterator it = fsManipulator.getLineIterator("F:\\data\\graduation\\gpsFilter\\1119.csv");
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
         ObjectMapper mapper = new ObjectMapper();
         long count = 0;
         while (it.hasNext()) {
-            GpsPoint point = GpsPoint.loadByOri(it.next());
-            ProducerRecord<String, String> record = new ProducerRecord<>("taxi-test-0501", 0, point.getTimestamp(), String.valueOf(point.getId()), mapper.writeValueAsString(point));
+            GpsPoint point = new GpsPoint(it.next());
+            ProducerRecord<String, String> record = new ProducerRecord<>(GlobalConfig.KAFKA_GPS_TOPIC, 0, point.getTimestamp(), String.valueOf(point.getId()), mapper.writeValueAsString(point));
             Future<RecordMetadata> future = producer.send(record);
             try {
                 RecordMetadata metadata = future.get();
