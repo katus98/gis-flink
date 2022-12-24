@@ -68,7 +68,7 @@ public class IncrementalHiddenMarkovMatching extends HiddenMarkovMatching {
             for (int i = 0; i < candidates.size(); i++) {
                 MatchingResult candidate = candidates.get(i);
                 candidate.setRouteStart(true);
-                if (maxP < eps[i]) {
+                if (eps[i] > maxP) {
                     maxP = eps[i];
                     mr = candidate;
                 }
@@ -120,7 +120,7 @@ public class IncrementalHiddenMarkovMatching extends HiddenMarkovMatching {
     }
 
     @Override
-    public void open(Configuration parameters) throws Exception {
+    public void open(Configuration parameters) {
         this.matchingResultState = getRuntimeContext().getState(new ValueStateDescriptor<>("matching-result", MatchingResult.class));
     }
 }

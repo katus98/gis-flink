@@ -5,37 +5,60 @@ import cn.edu.zju.gis.td.example.experiment.entity.GraphNode;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
 import cn.edu.zju.gis.td.example.experiment.global.GraphCalculator;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.util.Collector;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
- * 当前隐马尔可夫匹配算法 (当前全局最优)
- * 每个GPS点都会计算目前最优匹配点并输出到流(实时性强, 无误差积累, 但是存在匹配跳跃)
+ * 缓存当前隐马尔可夫匹配算法
+ * 在当前隐马尔可夫匹配算法的基础上通过缓存尽可能逼近全局最优路径(实时性稍弱可调节, 误差积累小, 无匹配跳跃)
+ * * 额外优化: 通过缓存局部最优解决直至可以排除不可能候选点时将缓存结果写入结果流
  *
  * @author SUN Katus
  * @version 1.0, 2022-12-13
  */
 @Slf4j
-public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
-    @Override
-    public boolean isCompatible(GpsPoint gpsPoint) throws IOException {
-        GpsPoint previousGPS = gpsPointState.value();
-        if (previousGPS == null) {
-            return false;
-        }
-        // 仅限新GPS时间与上一个时间不超过最大时间间隔
-        return gpsPoint.getTimestamp() - previousGPS.getTimestamp() < MatchingConstants.MAX_DELTA_TIME;
+public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatching {
+    private transient ValueState<Integer> bestIndexState;
+    private final double quotient;
+
+    public CachedPresentHiddenMarkovMatching(double quotient) {
+        this.quotient = quotient;
     }
 
     @Override
     public String name() {
-        return "present-hidden-markov-matching";
+        return "cached-present-hidden-markov-matching";
     }
 
     @Override
+    @Deprecated
     public MatchingResult map(GpsPoint gpsPoint) throws Exception {
+        log.error("Cached Present Hidden Markov Matching DO NOT Support Map Transformation.");
+        return null;
+    }
+
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        super.open(parameters);
+        this.bestIndexState = getRuntimeContext().getState(new ValueStateDescriptor<>("best-index", Integer.class));
+    }
+
+    @Override
+    public void flatMap(GpsPoint gpsPoint, Collector<MatchingResult> collector) throws Exception {
         MatchingResult mr;
+
+        // 获取状态值 - 1
+        // 前一个位置的候选点
+        List<MatchingResult> previousCandidates = new ArrayList<>();
+        for (MatchingResult matchingResult : candidatesState.get()) {
+            previousCandidates.add(matchingResult);
+        }
+        // 前一个当前最优匹配点索引号
+        int previousIndex = bestIndexState.value() == null ? -1 : bestIndexState.value();
 
         // 获取可能的最近匹配点
         List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
@@ -44,8 +67,13 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
             candidatesState.update(Collections.emptyList());
             filterProbabilitiesState.update(new double[0]);
             gpsPointState.update(null);
+            bestIndexState.update(-1);
             log.debug("Id {} point have bean deleted!", gpsPoint.getId());
-            return null;
+            // 道路中断将缓存结果加入流
+            if (previousIndex >= 0) {
+                addToResult(collector, previousCandidates.get(previousIndex));
+            }
+            return;
         }
 
         // 计算发射概率
@@ -66,21 +94,25 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
                 if (maxP < eps[i]) {
                     maxP = eps[i];
                     mr = candidate;
+                    bestIndexState.update(i);
                 }
+            }
+            // 道路匹配结果唯一将缓存结果加入流
+            if (candidates.size() == 1) {
+                if (previousIndex >= 0) {
+                    addToResult(collector, previousCandidates.get(previousIndex));
+                }
+                mr.setInStream(true);
+                collector.collect(mr);
             }
             // 更新状态
             candidatesState.update(candidates);
             filterProbabilitiesState.update(eps);
             gpsPointState.update(gpsPoint);
-            return mr;
+            return;
         }
 
-        // 获取状态值
-        // 前一个位置的候选点
-        List<MatchingResult> previousCandidates = new ArrayList<>();
-        for (MatchingResult matchingResult : candidatesState.get()) {
-            previousCandidates.add(matchingResult);
-        }
+        // 获取状态值 - 2
         // 前一个位置的过滤概率
         double[] previousFps = filterProbabilitiesState.value();
         // 前一个GPS点
@@ -124,8 +156,7 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
             for (int j = 0; j < previousCandidates.size(); j++) {
                 if (maxTFp < tps[i][j] * previousFps[j]) {
                     maxTFp = tps[i][j] * previousFps[j];
-                    // 由于当前最优不需要追溯路径所以可以省略记录上游节点, 节省开销
-                    // candidate.setPreviousMR(previousCandidates.get(j));
+                    candidate.setPreviousMR(previousCandidates.get(j));
                 }
             }
             filterPs[i] = maxTFp * eps[i];
@@ -133,44 +164,81 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
                 allZero = false;
             }
         }
-        // 如果过滤概率全为0, 将发射概率视作过滤概率
+        // 如果过滤概率全为0, 将发射概率视作过滤概率(说明通路不存在需要重新开启route匹配, 将缓存结果加入结果)
         if (allZero) {
             filterPs = eps;
+            // 道路中断将缓存结果加入流
+            if (previousIndex >= 0) {
+                addToResult(collector, previousCandidates.get(previousIndex));
+            }
         }
         // 获取过滤概率最高的候选点
         double maxP = 0.0;
-        int validCount = 0;
+        int validCount = 0, bestIndex = 0;
         mr = candidates.get(0);
         for (int i = 0; i < candidates.size(); i++) {
             MatchingResult candidate = candidates.get(i);
             if (allZero) {
                 candidate.setRouteStart(true);
+                candidate.setPreviousMR(null);
             }
             if (filterPs[i] > 0) {
                 validCount++;
             }
             if (filterPs[i] > maxP) {
                 maxP = filterPs[i];
+                bestIndex = i;
                 mr = candidate;
             }
         }
 
-        // 去除累积概率为0的候选点, 减轻后续运算压力
+        // 去除累积概率为0或者与局部最优概率差距过大的候选点, 减轻后续运算压力
         previousFps = new double[validCount];
-        int fi = 0;
+        int fi = 0, tmp = bestIndex;
         for (int i = 0; i < filterPs.length; i++) {
-            if (filterPs[i] > 0) {
+            if (filterPs[i] > 0 && canRetain(maxP, filterPs[i])) {
                 // 将过滤概率等比扩大防止精度不足导致的损失
                 previousFps[fi++] = filterPs[i] * (1 / maxP);
             } else {
+                if (i <= bestIndex) {
+                    tmp--;
+                }
                 // 移除过滤概率为0的候选点, 减少后续运算压力
                 candidates.remove(i - (filterPs.length - candidates.size()));
             }
+        }
+        bestIndex = tmp;
+        // 经过排除之后道路匹配结果唯一将缓存结果加入流
+        if (candidates.size() == 1) {
+            if (previousIndex >= 0) {
+                addToResult(collector, previousCandidates.get(previousIndex));
+            }
+            mr.setInStream(true);
+            collector.collect(mr);
         }
         // 更新变量状态
         filterProbabilitiesState.update(previousFps);
         candidatesState.update(candidates);
         gpsPointState.update(gpsPoint);
-        return mr;
+        bestIndexState.update(bestIndex);
+    }
+
+    protected void addToResult(Collector<MatchingResult> collector, MatchingResult lastMR) {
+        Deque<MatchingResult> stack = new LinkedList<>();
+        while (lastMR != null && !lastMR.isInStream()) {
+            stack.push(lastMR);
+            lastMR.setInStream(true);
+            lastMR = lastMR.getPreviousMR();
+        }
+        while (!stack.isEmpty()) {
+            MatchingResult mr = stack.poll();
+            // 中断上游联系, 防止路径过长堆栈溢出
+            mr.setPreviousMR(null);
+            collector.collect(mr);
+        }
+    }
+
+    protected boolean canRetain(double max, double v) {
+        return (max / v) <= quotient;
     }
 }

@@ -14,7 +14,7 @@ public class GpsPointFilter extends RichFilterFunction<GpsPoint> {
     private transient ValueState<GpsPoint> gpsPointState;
 
     @Override
-    public void open(Configuration parameters) throws Exception {
+    public void open(Configuration parameters) {
         this.gpsPointState = getRuntimeContext().getState(new ValueStateDescriptor<>("gps-point", GpsPoint.class));
     }
 

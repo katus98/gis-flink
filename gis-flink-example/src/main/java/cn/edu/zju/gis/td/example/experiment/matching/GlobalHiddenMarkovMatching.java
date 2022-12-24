@@ -21,7 +21,7 @@ import java.util.*;
 @Slf4j
 public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
     @Override
-    public boolean isCompatible(GpsPoint gpsPoint) throws Exception {
+    public boolean isCompatible(GpsPoint gpsPoint) {
         return true;
     }
 
@@ -63,7 +63,7 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                     previousFps = null;
                     previousGPS = null;
                 }
-                log.info("Index {} point have bean deleted!", count++);
+                log.debug("Index {} point have bean deleted!", count++);
                 continue;
             }
 
@@ -73,7 +73,7 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                 errors[i] = candidates.get(i).getError();
             }
             double[] eps = computeEmissionProbabilities(errors);
-            log.info("Index: {}, EPS: {}", count, Arrays.toString(eps));
+            log.debug("Index: {}, EPS: {}", count, Arrays.toString(eps));
 
             if (finalMR == null || gpsPoint.getTimestamp() - previousGPS.getTimestamp() > MatchingConstants.MAX_DELTA_TIME) {   // 如果当前位置是一条route的起点
                 // 将发射概率视作过滤概率
@@ -171,7 +171,7 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                     }
                 }
             }
-            log.info("Index: {}, FPS: {}", count, Arrays.toString(previousFps));
+            log.debug("Index: {}, FPS: {}", count, Arrays.toString(previousFps));
             previousCandidates = candidates;
             previousGPS = gpsPoint;
             if (finalMR != null) {
@@ -181,10 +181,7 @@ public class GlobalHiddenMarkovMatching extends HiddenMarkovMatching {
                     routeList.set(routeList.size() - 1, finalMR);
                 }
             }
-            count++;
-            if (count % 100 == 0) {
-                log.info("{}/{} points have finished!", count, gpsPoints.size());
-            }
+            log.debug("{}/{} points have finished!", ++count, gpsPoints.size());
         }
         List<MatchingResult> resList = new LinkedList<>();
         for (MatchingResult mr : routeList) {

@@ -77,7 +77,7 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
     }
 
     @Override
-    public void open(Configuration parameters) throws Exception {
+    public void open(Configuration parameters) {
         this.matchingResultState = getRuntimeContext().getState(new ValueStateDescriptor<>("matching-result", MatchingResult.class));
     }
 }
