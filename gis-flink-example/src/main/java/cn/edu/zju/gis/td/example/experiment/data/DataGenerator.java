@@ -4,8 +4,8 @@ import cn.edu.zju.gis.td.common.io.FsManipulator;
 import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
 import cn.edu.zju.gis.td.common.io.LineIterator;
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
+import cn.edu.zju.gis.td.example.experiment.entity.SerializedData;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -36,20 +36,19 @@ public class DataGenerator {
         properties.put("batch.size", 16384);
         properties.put("linger.ms", 1);
         properties.put("buffer.memory", 33554432);
-        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("key.serializer", "org.apache.kafka.common.serialization.LongSerializer");
+        properties.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
         return properties;
     }
 
     private static void generateTaxiStream(Properties properties) throws IOException {
         FsManipulator fsManipulator = FsManipulatorFactory.create();
         LineIterator it = fsManipulator.getLineIterator("F:\\data\\graduation\\gpsFilter\\1119.csv");
-        KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
-        ObjectMapper mapper = new ObjectMapper();
+        KafkaProducer<Long, byte[]> producer = new KafkaProducer<>(properties);
         long count = 0;
         while (it.hasNext()) {
-            GpsPoint point = new GpsPoint(it.next());
-            ProducerRecord<String, String> record = new ProducerRecord<>(GlobalConfig.KAFKA_GPS_TOPIC, 0, point.getTimestamp(), String.valueOf(point.getId()), mapper.writeValueAsString(point));
+            SerializedData.GpsPointSer gpsPointSer = new GpsPoint(it.next()).toSer();
+            ProducerRecord<Long, byte[]> record = new ProducerRecord<>(GlobalConfig.KAFKA_GPS_TOPIC, 0, gpsPointSer.getTimestamp(), gpsPointSer.getId(), gpsPointSer.toByteArray());
             Future<RecordMetadata> future = producer.send(record);
             try {
                 RecordMetadata metadata = future.get();

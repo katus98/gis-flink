@@ -38,6 +38,18 @@ public class GpsPoint implements Comparable<GpsPoint> {
         this.timestamp = Long.parseLong(items[8]);
     }
 
+    public GpsPoint(SerializedData.GpsPointSer gpsPointSer) {
+        this.id = gpsPointSer.getId();
+        this.taxiId = gpsPointSer.getTaxiId();
+        this.lon = gpsPointSer.getLon();
+        this.lat = gpsPointSer.getLat();
+        this.speed = gpsPointSer.getSpeed();
+        this.height = gpsPointSer.getHeight();
+        this.direct = gpsPointSer.getDirect();
+        this.mileage = gpsPointSer.getMileage();
+        this.timestamp = gpsPointSer.getTimestamp();
+    }
+
     public static GpsPoint loadByOri(String line) throws ParseException {
         GpsPoint gpsPoint = new GpsPoint();
         String[] items = line.split(",");
@@ -63,6 +75,11 @@ public class GpsPoint implements Comparable<GpsPoint> {
 
     public String toLine() {
         return id + "," + taxiId + "," + lon + "," + lat + "," + speed + "," + height + "," + direct + "," + mileage + "," + timestamp;
+    }
+
+    public SerializedData.GpsPointSer toSer() {
+        return SerializedData.GpsPointSer.newBuilder().setId(id).setTaxiId(taxiId).setLon(lon).setLat(lat)
+                .setSpeed(speed).setHeight(height).setDirect(direct).setMileage(mileage).setTimestamp(timestamp).build();
     }
 
     public boolean posEquals(Object o) {

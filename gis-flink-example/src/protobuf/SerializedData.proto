@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package cn.edu.zju.gis.td.example.experiment.entity;
+
+option optimize_for = SPEED;
+option java_package = "cn.edu.zju.gis.td.example.experiment.entity";
+option java_outer_classname = "SerializedData";
+
+message GpsPointSer {
+  int64 id = 1;
+  int32 taxiId = 2;
+  double lon = 3;
+  double lat = 4;
+  double speed = 5;
+  double height = 6;
+  double direct = 7;
+  double mileage = 8;
+  int64 timestamp = 9;
+}
+
+message MatPointSer {
+  int64 id = 1;
+  double oriX = 2;
+  double oriY = 3;
+  double matX = 4;
+  double matY = 5;
+  int64 edgeId = 6;
+  double ratioToNextNode = 7;
+  bool routeStart = 8;
+  int64 timestamp = 9;
+  double speed = 10;
+}

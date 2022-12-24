@@ -62,6 +62,10 @@ public class MatchingResult {
                 + "," + matchingPoint.getX() + "," + matchingPoint.getY() + "," + routeStart;
     }
 
+    public MatPoint toMatPoint() {
+        return new MatPoint(this);
+    }
+
     public void update() {
         if (ratioToNextNode >= 0) {
             return;
