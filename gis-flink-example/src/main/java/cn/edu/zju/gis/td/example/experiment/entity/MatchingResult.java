@@ -4,7 +4,6 @@ import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.locationtech.jts.geom.Coordinate;
@@ -24,7 +23,6 @@ import java.util.Arrays;
  */
 @Getter
 @Setter
-@ToString
 public class MatchingResult {
     private Point originalPoint;
     private Point matchingPoint;
@@ -36,6 +34,10 @@ public class MatchingResult {
     private volatile double ratioToNextNode;
     private MatchingResult previousMR;
     private boolean routeStart;
+    /**
+     * 是否已经加入到结果流中, 仅对自修正有作用
+     */
+    private boolean isInStream;
 
     public MatchingResult(GpsPoint gpsPoint, ResultSet rs) throws SQLException, ParseException, TransformException {
         this.gpsPoint = gpsPoint;
@@ -47,6 +49,8 @@ public class MatchingResult {
         this.ratioToNextNode = -1;
         this.previousMR = null;
         this.routeStart = false;
+        // 是否已经加入到结果流中, 仅对自修正有作用
+        this.isInStream = false;
     }
 
     public static String matchingTitle() {
@@ -82,5 +86,10 @@ public class MatchingResult {
                 this.ratioToNextNode = factory.createLineString(coords).getLength() / edgeWithInfo.getLength();
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return toMatchingLine();
     }
 }

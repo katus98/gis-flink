@@ -42,9 +42,6 @@ public final class MatchingSQL {
                 "FROM edges_f_pair, ip\n" +
                 "WHERE ST_DWithin(geom, ip.p, %d)\n" +
                 "ORDER BY dis", gpsPoint.getLon(), gpsPoint.getLat(), GlobalConfig.SRID_WGS84, GlobalConfig.SRID_WGS84_UTM_50N, MatchingConstants.MATCHING_TOLERANCE);
-        if (limit > 0) {
-            sql = sql + " LIMIT " + limit;
-        }
         Map<String, Boolean> osmFilterMap = new HashMap<>();
         Connection conn = GlobalConfig.PG_ORI_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
@@ -67,6 +64,10 @@ public final class MatchingSQL {
                 osmFilterMap.put(osmId, !edgeWithInfo.isOneway());
                 matchingList.add(mr);
             }
+            // 如果结果集大小达到限制, 则中断记录结果 (因为对结果进行筛选所以不能注入SQL语句)
+            if (matchingList.size() >= limit) {
+                break;
+            }
         }
         rs.close();
         stmt.close();
@@ -75,7 +76,7 @@ public final class MatchingSQL {
     }
 
     public static List<MatchingResult> queryNearCandidates(GpsPoint gpsPoint) throws SQLException, TransformException, ParseException {
-        return queryNearCandidates(gpsPoint, -1);
+        return queryNearCandidates(gpsPoint, Integer.MAX_VALUE);
     }
 
     /**
@@ -138,7 +139,7 @@ public final class MatchingSQL {
     }
 
     public static void loadBothIds() throws SQLException {
-        String sql = String.format("SELECT id FROM graph_nodes_jinhua WHERE is_node IS TRUE AND id <= %d", MatchingConstants.CENTER_POINT_NUMBER);
+        String sql = "SELECT id FROM nodes_f WHERE is_node IS TRUE AND is_center IS TRUE";
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
