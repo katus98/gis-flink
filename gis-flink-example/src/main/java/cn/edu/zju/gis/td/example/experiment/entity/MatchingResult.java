@@ -53,6 +53,20 @@ public class MatchingResult {
         this.isInStream = false;
     }
 
+    public MatchingResult(MatchingResult mr) {
+        this.originalPoint = mr.getOriginalPoint();
+        this.matchingPoint = mr.getMatchingPoint();
+        this.gpsPoint = mr.getGpsPoint();
+        this.edgeWithInfo = mr.getEdgeWithInfo();
+        this.error = mr.getError();
+        this.segmentNo = mr.getSegmentNo();
+        this.matchingSegment = mr.getMatchingSegment();
+        this.ratioToNextNode = mr.getRatioToNextNode();
+        this.previousMR = mr.getPreviousMR();
+        this.routeStart = mr.isRouteStart();
+        this.isInStream = mr.isInStream();
+    }
+
     public static String matchingTitle() {
         return GpsPoint.title() + ",edgeId,oriX,oriY,matX,matY,routeStart";
     }

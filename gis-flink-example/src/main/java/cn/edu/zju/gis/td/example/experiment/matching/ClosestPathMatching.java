@@ -54,6 +54,10 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         double radius = MatchingConstants.MAX_ALLOW_SPEED * (deltaTime / 1000.0) + 2 * MatchingConstants.GPS_TOLERANCE;
         // 获取可能的最近匹配点
         List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
+        if (candidates.isEmpty()) {
+            matchingResultState.update(null);
+            return null;
+        }
         // 获取范围内的所有边ID
         Set<Long> edgeIds = MatchingSQL.queryEdgeIdsWithinRange(previousMR.getMatchingPoint(), radius);
         // 获取范围内的所有节点ID
@@ -71,6 +75,10 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
                 minCost = cost;
                 mr = candidate;
             }
+        }
+        // 如果没有最短路径匹配点则退化为精确方向匹配
+        if (mr == null) {
+            mr = new ClosestDirectionAccurateMatching().map(gpsPoint);
         }
         matchingResultState.update(mr);
         return mr;

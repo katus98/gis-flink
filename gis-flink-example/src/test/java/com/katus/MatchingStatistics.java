@@ -19,7 +19,7 @@ import java.util.Map;
 public class MatchingStatistics {
     public static void main(String[] args) throws IOException {
         FsManipulator fsManipulator = FsManipulatorFactory.create();
-        LineIterator it = fsManipulator.getLineIterator("F:\\data\\graduation\\globalMR\\1119.csv");
+        LineIterator it = fsManipulator.getLineIterator("F:\\data\\graduation\\matching\\global-hidden-markov-matching\\1119.csv");
         it.next();
         Map<Long, MRLine> map = new LinkedHashMap<>();
         while (it.hasNext()) {
@@ -33,10 +33,26 @@ public class MatchingStatistics {
                 "F:\\data\\graduation\\matching\\closest-path-matching",
                 "F:\\data\\graduation\\matching\\incremental-hidden-markov-matching",
                 "F:\\data\\graduation\\matching\\present-hidden-markov-matching",
-                "F:\\data\\graduation\\matching\\auto-fix-hidden-markov-matching\\Q2",
-                "F:\\data\\graduation\\matching\\auto-fix-hidden-markov-matching\\Q5",
-                "F:\\data\\graduation\\matching\\auto-fix-hidden-markov-matching\\Q10",
-                "F:\\data\\graduation\\matching\\auto-fix-hidden-markov-matching\\Q20"
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-1",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-2",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-3",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-4",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-5",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-6",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-7",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-8",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-9",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-10",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-20",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-30",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-40",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-50",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-100",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-x-1",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-x-2",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-x-3",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-x-4",
+                "F:\\data\\graduation\\matching\\cached-present-hidden-markov-matching-x-5"
         };
         int index = 0;
         for (String path : paths) {
@@ -89,7 +105,7 @@ public class MatchingStatistics {
         private int[] status;   // cm, cdm, cdam, cpm, ihmm, phmm, afhmm2, afhmm5, afhmm10, afhmm20;
 
         public MRLine() {
-            this.status = new int[10];
+            this.status = new int[26];
         }
 
         public MRLine(String line) {
@@ -98,7 +114,7 @@ public class MatchingStatistics {
             this.x = Double.parseDouble(items[12]);
             this.y = Double.parseDouble(items[13]);
             this.edgeId = Long.parseLong(items[9]);
-            this.status = new int[10];
+            this.status = new int[26];
         }
     }
 }

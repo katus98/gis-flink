@@ -33,7 +33,7 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
 
     @Override
     public String name() {
-        return "cached-present-hidden-markov-matching-" + magnitudeLevel;
+        return "cached-present-hidden-markov-matching-x-" + magnitudeLevel;
     }
 
     @Override
@@ -51,6 +51,32 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
 
     @Override
     public void flatMap(GpsPoint gpsPoint, Collector<MatchingResult> collector) throws Exception {
+        // 实验测试用
+        if (gpsPoint.getId() == -1L) {
+            int total = 0, min = Integer.MAX_VALUE, max = -1;
+            for (int count : MatchingTest.BATCH_COUNT_LIST) {
+                if (count > max) {
+                    max = count;
+                }
+                if (count < min) {
+                    min = count;
+                }
+                total += count;
+            }
+            int size = MatchingTest.BATCH_COUNT_LIST.size();
+            double avg = 1.0 * total / size;
+            Collections.sort(MatchingTest.BATCH_COUNT_LIST);
+            log.info("Batch Push Size -- TOL: {}", total);
+            log.info("Batch Push Size -- AVG: {}, MAX: {}, MIN: {}", avg, max, min);
+            int mid = MatchingTest.BATCH_COUNT_LIST.get(size / 2);
+            int mid20 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.8 * size));
+            int mid5 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.95 * size));
+            int mid1 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.99 * size));
+            int mid01 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.999 * size));
+            log.info("Batch Push Size -- MID: {}, MID 20%H: {}, MID 5%H: {}, MID 1%H: {}, MID 0.1%H: {}", mid, mid20, mid5, mid1, mid01);
+            log.info("{},{},{},{},{},{},{},{},{},{}", magnitudeLevel, total, avg, max, min, mid, mid20, mid5, mid1, mid01);
+            log.info("ALL FINISHED!");
+        }
         MatchingResult mr;
 
         // 获取状态值 - 1
@@ -61,6 +87,26 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
         }
         // 前一个当前最优匹配点索引号
         int previousIndex = bestIndexState.value() == null ? -1 : bestIndexState.value();
+        // 前一个GPS点
+        GpsPoint previousGPS = gpsPointState.value();
+
+        // 对于停车等待的情况进行截断
+//        if (gpsPoint.posEquals(previousGPS)) {
+//            if (previousIndex >= 0) {
+//                MatchingResult previousMR = previousCandidates.get(previousIndex);
+//                pushIntoStream(collector, previousMR);
+//                mr = new MatchingResult(previousMR);
+//                mr.setGpsPoint(gpsPoint);
+//                mr.setRouteStart(true);
+//                mr.setPreviousMR(null);
+//                mr.setInStream(false);
+//                filterProbabilitiesState.update(new double[]{1.0});
+//                candidatesState.update(Collections.singletonList(mr));
+//                gpsPointState.update(gpsPoint);
+//                bestIndexState.update(0);
+//            }
+//            return;
+//        }
 
         // 获取可能的最近匹配点
         List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
@@ -73,7 +119,7 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
             log.debug("Id {} point have bean deleted!", gpsPoint.getId());
             // 道路中断将缓存结果加入流
             if (previousIndex >= 0) {
-                addToResult(collector, previousCandidates.get(previousIndex));
+                pushIntoStream(collector, previousCandidates.get(previousIndex));
             }
             return;
         }
@@ -102,7 +148,7 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
             // 道路匹配结果唯一将缓存结果加入流
             if (candidates.size() == 1) {
                 if (previousIndex >= 0) {
-                    addToResult(collector, previousCandidates.get(previousIndex));
+                    pushIntoStream(collector, previousCandidates.get(previousIndex));
                 }
                 mr.setInStream(true);
                 collector.collect(mr);
@@ -117,8 +163,6 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
         // 获取状态值 - 2
         // 前一个位置的过滤概率
         double[] previousFps = filterProbabilitiesState.value();
-        // 前一个GPS点
-        GpsPoint previousGPS = gpsPointState.value();
 
         // 计算与上一次匹配点的间隔时间
         long deltaTime = gpsPoint.getTimestamp() - previousGPS.getTimestamp();
@@ -171,7 +215,7 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
             filterPs = eps;
             // 道路中断将缓存结果加入流
             if (previousIndex >= 0) {
-                addToResult(collector, previousCandidates.get(previousIndex));
+                pushIntoStream(collector, previousCandidates.get(previousIndex));
             }
         }
         // 获取过滤概率最高的候选点
@@ -213,7 +257,7 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
         // 经过排除之后道路匹配结果唯一将缓存结果加入流
         if (candidates.size() == 1) {
             if (previousIndex >= 0) {
-                addToResult(collector, previousCandidates.get(previousIndex));
+                pushIntoStream(collector, previousCandidates.get(previousIndex));
             }
             mr.setInStream(true);
             collector.collect(mr);
@@ -225,12 +269,17 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
         bestIndexState.update(bestIndex);
     }
 
-    protected void addToResult(Collector<MatchingResult> collector, MatchingResult lastMR) {
+    protected void pushIntoStream(Collector<MatchingResult> collector, MatchingResult lastMR) {
         Deque<MatchingResult> stack = new LinkedList<>();
         while (lastMR != null && !lastMR.isInStream()) {
             stack.push(lastMR);
             lastMR.setInStream(true);
             lastMR = lastMR.getPreviousMR();
+        }
+        // 实验测试用
+        if (stack.size() > 0) {
+            log.info("Batch Push Size: {}", stack.size());
+            MatchingTest.BATCH_COUNT_LIST.add(stack.size());
         }
         while (!stack.isEmpty()) {
             MatchingResult mr = stack.poll();

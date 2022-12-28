@@ -30,13 +30,18 @@ public class ClosestDirectionMatching implements Matching<GpsPoint, MatchingResu
             return new ClosestMatching().map(gpsPoint);
         }
         List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
+        // 如果不存在候选点直接结束匹配
+        if (candidates.isEmpty()) {
+            return null;
+        }
         for (MatchingResult mr : candidates) {
             if (judgeDirections(mr)) {
                 mr.update();
                 return mr;
             }
         }
-        return null;
+        // 如果没有符合条件的方向匹配点则退化为最近道路匹配
+        return new ClosestMatching().map(gpsPoint);
     }
 
     protected boolean judgeDirections(MatchingResult matchingResult) {

@@ -43,9 +43,15 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class MatchingTest {
+    public static final List<Integer> BATCH_COUNT_LIST;
+
+    static {
+        BATCH_COUNT_LIST = new ArrayList<>();
+    }
+
     public static void main(String[] args) throws Exception {
         GlobalUtil.initialize();
-        matchingStream();
+        matchingGlobal();
     }
 
     private static void matchingStream() throws Exception {
@@ -60,7 +66,7 @@ public class MatchingTest {
                 .build();
         DataStreamSource<SerializedData.GpsPointSer> resSource = env.fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TOPIC);
         // 指定匹配算法类型
-        Matching<GpsPoint, MatchingResult> matching = new CachedPresentHiddenMarkovMatching(10);
+        Matching<GpsPoint, MatchingResult> matching = new CachedPresentHiddenMarkovMatching(5);
         // 设置输出路径
         String outFilename = "F:\\data\\graduation\\matching\\" + matching.name();
         FsManipulator fsManipulator = FsManipulatorFactory.create();
@@ -92,8 +98,9 @@ public class MatchingTest {
 
     private static void matchingGlobal() throws IOException, SQLException, TransformException, ParseException {
         FsManipulator fsManipulator = FsManipulatorFactory.create();
+        GlobalHiddenMarkovMatching globalHiddenMarkovMatching = new GlobalHiddenMarkovMatching();
         String[] filenames = fsManipulator.list("F:\\data\\graduation\\gpsFilter");
-        String outPath = "F:\\data\\graduation\\globalMR\\";
+        String outPath = "F:\\data\\graduation\\matching\\" + globalHiddenMarkovMatching.name() + "\\";
         Set<String> outFilenameSet = Arrays.stream(fsManipulator.list(outPath)).collect(Collectors.toSet());
         for (String filename : filenames) {
             String name = filename.substring(filename.lastIndexOf("\\") + 1);
@@ -107,7 +114,6 @@ public class MatchingTest {
             while (it.hasNext()) {
                 gpsList.add(new GpsPoint(it.next()));
             }
-            GlobalHiddenMarkovMatching globalHiddenMarkovMatching = new GlobalHiddenMarkovMatching();
             List<MatchingResult> resultList = globalHiddenMarkovMatching.match(gpsList);
             List<String> contents = new ArrayList<>();
             contents.add(MatchingResult.matchingTitle());
