@@ -20,13 +20,14 @@ message GpsPointSer {
 
 message MatPointSer {
   int64 id = 1;
-  double oriX = 2;
-  double oriY = 3;
-  double matX = 4;
-  double matY = 5;
-  int64 edgeId = 6;
-  double ratioToNextNode = 7;
-  bool routeStart = 8;
-  int64 timestamp = 9;
-  double speed = 10;
+  int32 taxiId = 2;
+  double oriX = 3;
+  double oriY = 4;
+  double matX = 5;
+  double matY = 6;
+  int64 edgeId = 7;
+  double ratioToNextNode = 8;
+  bool routeStart = 9;
+  int64 timestamp = 10;
+  double speed = 11;
 }

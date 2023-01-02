@@ -43,6 +43,7 @@ public final class GlobalConfig {
      */
     public static final String KAFKA_SERVER;
     public static final String KAFKA_GPS_TOPIC;
+    public static final String KAFKA_MPS_TOPIC;
     public static final String KAFKA_ILLEGALITY_TOPIC;
     public static final String KAFKA_ACCIDENT_TOPIC;
     public static final long TIME_0501;
@@ -51,6 +52,7 @@ public final class GlobalConfig {
     static {
         KAFKA_SERVER = "*:9092";
         KAFKA_GPS_TOPIC = "taxi-test-0501";
+        KAFKA_MPS_TOPIC = "mps-exp";
         KAFKA_ILLEGALITY_TOPIC = "illegal";
         KAFKA_ACCIDENT_TOPIC = "accident";
         TIME_0501 = 1651334400000L;

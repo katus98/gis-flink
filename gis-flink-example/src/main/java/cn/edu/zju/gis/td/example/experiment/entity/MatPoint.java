@@ -13,6 +13,7 @@ import lombok.ToString;
 @ToString
 public class MatPoint {
     private long id;
+    private int taxiId;
     private double oriX;
     private double oriY;
     private double matX;
@@ -25,6 +26,7 @@ public class MatPoint {
 
     public MatPoint(MatchingResult mr) {
         this.id = mr.getGpsPoint().getId();
+        this.taxiId = mr.getGpsPoint().getTaxiId();
         this.oriX = mr.getOriginalPoint().getX();
         this.oriY = mr.getOriginalPoint().getY();
         this.matX = mr.getMatchingPoint().getX();
@@ -38,6 +40,7 @@ public class MatPoint {
 
     public MatPoint(SerializedData.MatPointSer ser) {
         this.id = ser.getId();
+        this.taxiId = ser.getTaxiId();
         this.oriX = ser.getOriX();
         this.oriY = ser.getOriY();
         this.matX = ser.getMatX();
@@ -50,7 +53,7 @@ public class MatPoint {
     }
 
     public SerializedData.MatPointSer toSer() {
-        return SerializedData.MatPointSer.newBuilder().setId(id).setOriX(oriX).setOriY(oriY).setMatX(matX).setMatY(matY)
+        return SerializedData.MatPointSer.newBuilder().setId(id).setTaxiId(taxiId).setOriX(oriX).setOriY(oriY).setMatX(matX).setMatY(matY)
                 .setEdgeId(edgeId).setRatioToNextNode(ratioToNextNode).setRouteStart(routeStart).setTimestamp(timestamp)
                 .setSpeed(speed).build();
     }
