@@ -94,28 +94,28 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
         GpsPoint previousGPS = gpsPointState.value();
 
         // 对于停车等待的情况进行具有一定缓冲的截断
-//        if (gpsPoint.posEquals(previousGPS)) {
-//            int stopCount = stopCountState.value() == null ? 1 : stopCountState.value() + 1;
-//            stopCountState.update(stopCount);
-//            if (stopCount >= MAX_STOP) {
-//                if (previousIndex >= 0) {
-//                    MatchingResult previousMR = previousCandidates.get(previousIndex);
-//                    pushIntoStream(collector, previousMR);
-//                    mr = new MatchingResult(previousMR);
-//                    mr.setGpsPoint(gpsPoint);
-//                    mr.setRouteStart(true);
-//                    mr.setPreviousMR(null);
-//                    mr.setInStream(false);
-//                    filterProbabilitiesState.update(new double[]{1.0});
-//                    candidatesState.update(Collections.singletonList(mr));
-//                    gpsPointState.update(gpsPoint);
-//                    bestIndexState.update(0);
-//                }
-//                return;
-//            }
-//        } else {
-//            stopCountState.update(0);
-//        }
+        if (gpsPoint.posEquals(previousGPS)) {
+            int stopCount = stopCountState.value() == null ? 1 : stopCountState.value() + 1;
+            stopCountState.update(stopCount);
+            if (stopCount >= MAX_STOP) {
+                if (previousIndex >= 0) {
+                    MatchingResult previousMR = previousCandidates.get(previousIndex);
+                    pushIntoStream(collector, previousMR);
+                    mr = new MatchingResult(previousMR);
+                    mr.setGpsPoint(gpsPoint);
+                    mr.setRouteStart(true);
+                    mr.setPreviousMR(null);
+                    mr.setInStream(false);
+                    filterProbabilitiesState.update(new double[]{1.0});
+                    candidatesState.update(Collections.singletonList(mr));
+                    gpsPointState.update(gpsPoint);
+                    bestIndexState.update(0);
+                }
+                return;
+            }
+        } else {
+            stopCountState.update(0);
+        }
 
         // 获取可能的最近匹配点
         List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);

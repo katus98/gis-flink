@@ -23,7 +23,7 @@ import java.util.Arrays;
  */
 @Getter
 @Setter
-public class MatchingResult {
+public class MatchingResult implements Matchable {
     private Point originalPoint;
     private Point matchingPoint;
     private GpsPoint gpsPoint;
@@ -80,6 +80,7 @@ public class MatchingResult {
         return new MatPoint(this);
     }
 
+    @Override
     public void update() {
         if (ratioToNextNode >= 0) {
             return;

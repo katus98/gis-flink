@@ -82,10 +82,14 @@ public final class MatchingSQL {
     /**
      * 获取空间范围内的所有边ID
      */
-    public static Set<Long> queryEdgeIdsWithinRange(Point previousPoint, double radius) throws SQLException {
+    public static Set<Long> queryEdgeIdsWithinRange(Point centerPoint, double radius) throws SQLException {
+        return queryEdgeIdsWithinRange(centerPoint.getX(), centerPoint.getY(), radius);
+    }
+
+    public static Set<Long> queryEdgeIdsWithinRange(double x, double y, double radius) throws SQLException {
         Set<Long> idSet = new HashSet<>();
         String sql = String.format("SELECT id FROM graph_edges_jinhua WHERE ST_Intersects(geom, ST_Buffer(ST_SetSRID(ST_Point(%f, %f), %d), %f))",
-                previousPoint.getX(), previousPoint.getY(), GlobalConfig.SRID_WGS84_UTM_50N, radius);
+                x, y, GlobalConfig.SRID_WGS84_UTM_50N, radius);
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
@@ -101,10 +105,14 @@ public final class MatchingSQL {
     /**
      * 获取空间范围内的所有节点ID
      */
-    public static Map<Long, GraphNode> queryNodeIdsWithinRange(Point previousPoint, double radius) throws SQLException {
+    public static Map<Long, GraphNode> queryNodeIdsWithinRange(Point centerPoint, double radius) throws SQLException {
+        return queryNodeIdsWithinRange(centerPoint.getX(), centerPoint.getY(), radius);
+    }
+
+    public static Map<Long, GraphNode> queryNodeIdsWithinRange(double x, double y, double radius) throws SQLException {
         Map<Long, GraphNode> idMap = new LinkedHashMap<>();
         String sql = String.format("SELECT id FROM graph_nodes_jinhua WHERE ST_Intersects(geom, ST_Buffer(ST_SetSRID(ST_Point(%f, %f), %d), %f))",
-                previousPoint.getX(), previousPoint.getY(), GlobalConfig.SRID_WGS84_UTM_50N, radius);
+                x, y, GlobalConfig.SRID_WGS84_UTM_50N, radius);
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
@@ -136,6 +144,21 @@ public final class MatchingSQL {
             GRAPH.put(startId, list);
         }
         return GRAPH.get(startId);
+    }
+
+    /**
+     * 根据边ID获取边信息
+     */
+    public static EdgeWithInfo acquireEdgeById(long id) throws SQLException, ParseException {
+        String sql = String.format("SELECT * FROM graph_edges_jinhua WHERE id = %d", id);
+        Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        EdgeWithInfo edgeWithInfo = new EdgeWithInfo(rs);
+        rs.close();
+        stmt.close();
+        conn.close();
+        return edgeWithInfo;
     }
 
     public static void loadBothIds() throws SQLException {

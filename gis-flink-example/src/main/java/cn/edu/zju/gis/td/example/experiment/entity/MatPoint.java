@@ -1,8 +1,16 @@
 package cn.edu.zju.gis.td.example.experiment.entity;
 
+import cn.edu.zju.gis.td.example.experiment.matching.MatchingSQL;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import org.geotools.geometry.jts.JTSFactoryFinder;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.ParseException;
+
+import java.sql.SQLException;
 
 /**
  * @author SUN Katus
@@ -10,8 +18,8 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString
-public class MatPoint {
+@Slf4j
+public class MatPoint implements Matchable {
     private long id;
     private int taxiId;
     private double oriX;
@@ -23,6 +31,7 @@ public class MatPoint {
     private boolean routeStart;
     private long timestamp;
     private double speed;
+    private volatile EdgeWithInfo edgeWithInfo;
 
     public MatPoint(MatchingResult mr) {
         this.id = mr.getGpsPoint().getId();
@@ -56,5 +65,41 @@ public class MatPoint {
         return SerializedData.MatPointSer.newBuilder().setId(id).setTaxiId(taxiId).setOriX(oriX).setOriY(oriY).setMatX(matX).setMatY(matY)
                 .setEdgeId(edgeId).setRatioToNextNode(ratioToNextNode).setRouteStart(routeStart).setTimestamp(timestamp)
                 .setSpeed(speed).build();
+    }
+
+    @Override
+    public Point getOriginalPoint() {
+        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
+        Coordinate coordinate = new Coordinate(oriX, oriY);
+        return geometryFactory.createPoint(coordinate);
+    }
+
+    @Override
+    public Point getMatchingPoint() {
+        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
+        Coordinate coordinate = new Coordinate(matX, matY);
+        return geometryFactory.createPoint(coordinate);
+    }
+
+    @Override
+    public EdgeWithInfo getEdgeWithInfo() {
+        if (edgeWithInfo == null) {
+            synchronized (this) {
+                if (edgeWithInfo == null) {
+                    try {
+                        this.edgeWithInfo = MatchingSQL.acquireEdgeById(edgeId);
+                    } catch (SQLException | ParseException e) {
+                        log.error("EDGE ID {} DO NOT EXIST.", edgeId);
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+        return edgeWithInfo;
+    }
+
+    @Override
+    public void update() {
+
     }
 }

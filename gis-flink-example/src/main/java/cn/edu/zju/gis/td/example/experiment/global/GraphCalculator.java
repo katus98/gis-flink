@@ -1,9 +1,6 @@
 package cn.edu.zju.gis.td.example.experiment.global;
 
-import cn.edu.zju.gis.td.example.experiment.entity.Edge;
-import cn.edu.zju.gis.td.example.experiment.entity.EdgeWithInfo;
-import cn.edu.zju.gis.td.example.experiment.entity.GraphNode;
-import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
+import cn.edu.zju.gis.td.example.experiment.entity.*;
 import cn.edu.zju.gis.td.example.experiment.matching.MatchingConstants;
 import cn.edu.zju.gis.td.example.experiment.matching.MatchingSQL;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +29,7 @@ public class GraphCalculator {
     /**
      * 起点匹配点
      */
-    private MatchingResult startMR;
+    private Matchable startMR;
     /**
      * 图计算是否完成
      */
@@ -45,7 +42,7 @@ public class GraphCalculator {
         this.isFinished = false;
     }
 
-    public MatchingResult getStartMR() {
+    public Matchable getStartMR() {
         return startMR;
     }
 
@@ -57,13 +54,13 @@ public class GraphCalculator {
         return startMR.getEdgeWithInfo().getId();
     }
 
-    public void setStartMR(MatchingResult startMR) {
+    public void setStartMR(Matchable startMR) {
         startMR.update();
         this.startMR = startMR;
         this.isFinished = false;
     }
 
-    public double computeCost(MatchingResult endMR) throws SQLException {
+    public double computeCost(Matchable endMR) throws SQLException {
         buildNodeGraphMap();
         endMR.update();
         EdgeWithInfo edgeWithInfo = endMR.getEdgeWithInfo();
@@ -73,7 +70,7 @@ public class GraphCalculator {
         return nodeGraphMap.containsKey(edgeWithInfo.getStartId()) ? nodeGraphMap.get(edgeWithInfo.getStartId()).getCumulativeCost() + (1 - endMR.getRatioToNextNode()) * edgeWithInfo.cost() : MatchingConstants.MAX_COST;
     }
 
-    public double computeStraightDistance(MatchingResult endMR) {
+    public double computeStraightDistance(Matchable endMR) {
         return startMR.getMatchingPoint().distance(endMR.getMatchingPoint());
     }
 
