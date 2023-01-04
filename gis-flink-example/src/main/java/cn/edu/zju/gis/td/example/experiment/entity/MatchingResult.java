@@ -81,6 +81,11 @@ public class MatchingResult implements Matchable {
     }
 
     @Override
+    public Edge getEdge() {
+        return edgeWithInfo;
+    }
+
+    @Override
     public void update() {
         if (ratioToNextNode >= 0) {
             return;

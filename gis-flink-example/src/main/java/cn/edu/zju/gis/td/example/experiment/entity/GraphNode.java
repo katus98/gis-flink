@@ -15,13 +15,13 @@ public class GraphNode {
     private boolean visited;
     private double cumulativeCost;
     private long previousNodeId;
-    private long previousEdgeId;
+    private long presentEdgeId;
 
     public GraphNode(long id) {
         this.id = id;
         this.visited = false;
         this.cumulativeCost = MatchingConstants.MAX_COST;
         this.previousNodeId = -1;
-        this.previousEdgeId = -1;
+        this.presentEdgeId = -1;
     }
 }

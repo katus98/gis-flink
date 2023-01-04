@@ -9,7 +9,7 @@ import org.locationtech.jts.geom.Point;
 public interface Matchable {
     Point getOriginalPoint();
     Point getMatchingPoint();
-    EdgeWithInfo getEdgeWithInfo();
+    Edge getEdge();
     double getRatioToNextNode();
     void update();
 }

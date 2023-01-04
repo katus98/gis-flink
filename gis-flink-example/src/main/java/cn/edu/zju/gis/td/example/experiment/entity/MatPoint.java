@@ -31,7 +31,7 @@ public class MatPoint implements Matchable {
     private boolean routeStart;
     private long timestamp;
     private double speed;
-    private volatile EdgeWithInfo edgeWithInfo;
+    private volatile Edge edge;
 
     public MatPoint(MatchingResult mr) {
         this.id = mr.getGpsPoint().getId();
@@ -82,12 +82,12 @@ public class MatPoint implements Matchable {
     }
 
     @Override
-    public EdgeWithInfo getEdgeWithInfo() {
-        if (edgeWithInfo == null) {
+    public Edge getEdge() {
+        if (edge == null) {
             synchronized (this) {
-                if (edgeWithInfo == null) {
+                if (edge == null) {
                     try {
-                        this.edgeWithInfo = QueryUtil.acquireEdgeById(edgeId);
+                        this.edge = QueryUtil.acquireEdgeById(edgeId);
                     } catch (SQLException | ParseException e) {
                         log.error("EDGE ID {} DO NOT EXIST.", edgeId);
                         throw new RuntimeException(e);
@@ -95,7 +95,7 @@ public class MatPoint implements Matchable {
                 }
             }
         }
-        return edgeWithInfo;
+        return edge;
     }
 
     @Override

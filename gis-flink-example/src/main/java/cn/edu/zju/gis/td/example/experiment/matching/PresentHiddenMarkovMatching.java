@@ -104,7 +104,7 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
             MatchingResult previousCandidate = previousCandidates.get(i);
             // 防止一个都没有
             nodeGraphMap.put(previousCandidate.getEdgeWithInfo().getEndId(), null);
-            calculator.setStartMR(previousCandidate);
+            calculator.setStartPoint(previousCandidate);
             for (int j = 0; j < candidates.size(); j++) {
                 MatchingResult candidate = candidates.get(j);
                 dts[j][i] = Math.abs(calculator.computeStraightDistance(candidate) - calculator.computeCost(candidate));

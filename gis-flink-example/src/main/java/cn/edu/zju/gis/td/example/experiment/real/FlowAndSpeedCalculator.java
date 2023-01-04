@@ -42,7 +42,7 @@ public class FlowAndSpeedCalculator extends RichFlatMapFunction<MatPoint, FlowAn
             // 获取范围内的所有节点ID
             Map<Long, GraphNode> nodeGraphMap = QueryUtil.queryNodeIdsWithinRange(previousMP.getMatX(), previousMP.getMatY(), radius);
             GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);
-            calculator.setStartMR(previousMP);
+            calculator.setStartPoint(previousMP);
             double cost = calculator.computeCost(matPoint);
             // todo 获取路径上的结点ID
         }
