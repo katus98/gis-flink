@@ -97,6 +97,7 @@ public class GraphCalculator {
                     GraphNode startGraphNode = nodeGraphMap.get(startId);
                     startGraphNode.setCumulativeCost(startMR.getRatioToNextNode() * startEdge.cost());
                     startGraphNode.setVisited(true);
+                    startGraphNode.setPreviousEdgeId(startEdge.getId());
                     // 获取从起点开始的所有边
                     List<Edge> edges = QueryUtil.acquireAllEdges(startId);
                     boolean isRealNode = QueryUtil.isRealNode(startId);
@@ -109,6 +110,7 @@ public class GraphCalculator {
                             if (isRealNode || lastStartId != endId) {
                                 graphNode.setCumulativeCost(edge.cost() + startGraphNode.getCumulativeCost());
                                 graphNode.setPreviousNodeId(startId);
+                                graphNode.setPreviousEdgeId(edge.getId());
                             }
                         }
                     }
@@ -138,6 +140,7 @@ public class GraphCalculator {
                                     if (graphNode.getCumulativeCost() > newCost) {
                                         graphNode.setCumulativeCost(newCost);
                                         graphNode.setPreviousNodeId(startId);
+                                        graphNode.setPreviousEdgeId(edge.getId());
                                     }
                                 }
                             }
