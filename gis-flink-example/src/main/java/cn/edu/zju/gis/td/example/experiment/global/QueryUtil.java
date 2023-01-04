@@ -1,7 +1,7 @@
-package cn.edu.zju.gis.td.example.experiment.matching;
+package cn.edu.zju.gis.td.example.experiment.global;
 
 import cn.edu.zju.gis.td.example.experiment.entity.*;
-import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
+import cn.edu.zju.gis.td.example.experiment.matching.MatchingConstants;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.opengis.referencing.operation.TransformException;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author SUN Katus
  * @version 1.0, 2022-12-10
  */
-public final class MatchingSQL {
+public final class QueryUtil {
     /**
      * 图结构缓存(懒加载)
      */

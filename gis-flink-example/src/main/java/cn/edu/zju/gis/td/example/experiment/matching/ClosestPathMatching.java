@@ -2,6 +2,7 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 
 import cn.edu.zju.gis.td.example.experiment.entity.*;
 import cn.edu.zju.gis.td.example.experiment.global.GraphCalculator;
+import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
@@ -53,15 +54,15 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         // 计算时间间隔内的最大可能通行范围
         double radius = MatchingConstants.MAX_ALLOW_SPEED * (deltaTime / 1000.0) + 2 * MatchingConstants.GPS_TOLERANCE;
         // 获取可能的最近匹配点
-        List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
+        List<MatchingResult> candidates = QueryUtil.queryNearCandidates(gpsPoint);
         if (candidates.isEmpty()) {
             matchingResultState.update(null);
             return null;
         }
         // 获取范围内的所有边ID
-        Set<Long> edgeIds = MatchingSQL.queryEdgeIdsWithinRange(previousMR.getMatchingPoint(), radius);
+        Set<Long> edgeIds = QueryUtil.queryEdgeIdsWithinRange(previousMR.getMatchingPoint(), radius);
         // 获取范围内的所有节点ID
-        Map<Long, GraphNode> nodeGraphMap = MatchingSQL.queryNodeIdsWithinRange(previousMR.getMatchingPoint(), radius);
+        Map<Long, GraphNode> nodeGraphMap = QueryUtil.queryNodeIdsWithinRange(previousMR.getMatchingPoint(), radius);
         // 构建图计算器
         GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);
         calculator.setStartMR(previousMR);

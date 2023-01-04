@@ -2,7 +2,6 @@ package cn.edu.zju.gis.td.example.experiment.global;
 
 import cn.edu.zju.gis.td.example.experiment.entity.*;
 import cn.edu.zju.gis.td.example.experiment.matching.MatchingConstants;
-import cn.edu.zju.gis.td.example.experiment.matching.MatchingSQL;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
@@ -99,8 +98,8 @@ public class GraphCalculator {
                     startGraphNode.setCumulativeCost(startMR.getRatioToNextNode() * startEdge.cost());
                     startGraphNode.setVisited(true);
                     // 获取从起点开始的所有边
-                    List<Edge> edges = MatchingSQL.acquireAllEdges(startId);
-                    boolean isRealNode = MatchingSQL.isRealNode(startId);
+                    List<Edge> edges = QueryUtil.acquireAllEdges(startId);
+                    boolean isRealNode = QueryUtil.isRealNode(startId);
                     // 初始化直接与起点相连的信息
                     for (Edge edge : edges) {
                         long endId = edge.getEndId();
@@ -127,8 +126,8 @@ public class GraphCalculator {
                         }
                         nodeGraphMap.get(startId).setVisited(true);
                         lastStartId = nodeGraphMap.get(startId).getPreviousNodeId();
-                        edges = MatchingSQL.acquireAllEdges(startId);
-                        isRealNode = MatchingSQL.isRealNode(startId);
+                        edges = QueryUtil.acquireAllEdges(startId);
+                        isRealNode = QueryUtil.isRealNode(startId);
                         for (Edge edge : edges) {
                             long endId = edge.getEndId();
                             // 仅处理范围内的边和节点

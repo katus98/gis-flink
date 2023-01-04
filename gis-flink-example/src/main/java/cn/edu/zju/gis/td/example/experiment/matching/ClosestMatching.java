@@ -3,6 +3,7 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
+import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -34,7 +35,7 @@ public class ClosestMatching implements Matching<GpsPoint, MatchingResult> {
         if (!isCompatible(gpsPoint)) {
             return null;
         }
-        List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint, 2);
+        List<MatchingResult> candidates = QueryUtil.queryNearCandidates(gpsPoint, 2);
         MatchingResult firstMR;
         switch (candidates.size()) {
             case 1:

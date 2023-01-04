@@ -1,6 +1,6 @@
 package cn.edu.zju.gis.td.example.experiment.entity;
 
-import cn.edu.zju.gis.td.example.experiment.matching.MatchingSQL;
+import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +87,7 @@ public class MatPoint implements Matchable {
             synchronized (this) {
                 if (edgeWithInfo == null) {
                     try {
-                        this.edgeWithInfo = MatchingSQL.acquireEdgeById(edgeId);
+                        this.edgeWithInfo = QueryUtil.acquireEdgeById(edgeId);
                     } catch (SQLException | ParseException e) {
                         log.error("EDGE ID {} DO NOT EXIST.", edgeId);
                         throw new RuntimeException(e);

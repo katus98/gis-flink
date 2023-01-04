@@ -4,6 +4,7 @@ import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.GraphNode;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
 import cn.edu.zju.gis.td.example.experiment.global.GraphCalculator;
+import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
         MatchingResult mr;
 
         // 获取可能的最近匹配点
-        List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
+        List<MatchingResult> candidates = QueryUtil.queryNearCandidates(gpsPoint);
         // 如果当前位置不存在匹配点
         if (candidates.isEmpty()) {
             candidatesState.update(Collections.emptyList());
@@ -91,9 +92,9 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
         // 计算时间间隔内的最大可能通行范围
         double radius = MatchingConstants.MAX_ALLOW_SPEED * (deltaTime / 1000.0) + 2 * MatchingConstants.GPS_TOLERANCE;
         // 获取范围内的所有边ID
-        Set<Long> edgeIds = MatchingSQL.queryEdgeIdsWithinRange(previousCandidates.get(0).getOriginalPoint(), radius);
+        Set<Long> edgeIds = QueryUtil.queryEdgeIdsWithinRange(previousCandidates.get(0).getOriginalPoint(), radius);
         // 获取范围内的所有节点ID
-        Map<Long, GraphNode> nodeGraphMap = MatchingSQL.queryNodeIdsWithinRange(previousCandidates.get(0).getOriginalPoint(), radius);
+        Map<Long, GraphNode> nodeGraphMap = QueryUtil.queryNodeIdsWithinRange(previousCandidates.get(0).getOriginalPoint(), radius);
 
         // 构建图计算器
         GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);

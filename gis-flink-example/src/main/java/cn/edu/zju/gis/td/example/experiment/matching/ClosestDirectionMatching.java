@@ -2,6 +2,7 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
+import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class ClosestDirectionMatching implements Matching<GpsPoint, MatchingResu
         if (!isCompatible(gpsPoint)) {
             return new ClosestMatching().map(gpsPoint);
         }
-        List<MatchingResult> candidates = MatchingSQL.queryNearCandidates(gpsPoint);
+        List<MatchingResult> candidates = QueryUtil.queryNearCandidates(gpsPoint);
         // 如果不存在候选点直接结束匹配
         if (candidates.isEmpty()) {
             return null;

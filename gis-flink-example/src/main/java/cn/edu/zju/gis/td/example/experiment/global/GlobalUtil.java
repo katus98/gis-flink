@@ -1,6 +1,5 @@
 package cn.edu.zju.gis.td.example.experiment.global;
 
-import cn.edu.zju.gis.td.example.experiment.matching.MatchingSQL;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
@@ -43,6 +42,6 @@ public final class GlobalUtil {
     }
 
     public static void initialize() throws SQLException {
-        MatchingSQL.loadBothIds();
+        QueryUtil.loadBothIds();
     }
 }
