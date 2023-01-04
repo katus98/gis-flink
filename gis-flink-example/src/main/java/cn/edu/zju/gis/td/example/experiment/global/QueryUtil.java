@@ -149,20 +149,21 @@ public final class QueryUtil {
     /**
      * 根据边ID获取边信息
      */
-    public static EdgeWithInfo acquireEdgeById(long id) throws SQLException, ParseException {
-        String sql = String.format("SELECT * FROM graph_edges_jinhua WHERE id = %d", id);
+    public static Edge acquireEdgeById(long id) throws SQLException, ParseException {
+        String sql = String.format("SELECT id, start_id, end_id, length, time, velocity, flow FROM graph_edges_jinhua WHERE id = %d", id);
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
-        EdgeWithInfo edgeWithInfo = new EdgeWithInfo(rs);
+        Edge edge = new Edge(rs);
         rs.close();
         stmt.close();
         conn.close();
-        return edgeWithInfo;
+        return edge;
     }
 
-    public static void loadBothIds() throws SQLException {
+    static void loadBothIds() throws SQLException {
         String sql = "SELECT id FROM nodes_f WHERE is_node IS TRUE AND is_center IS TRUE";
+        BOTH_ID_SET.clear();
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
