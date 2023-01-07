@@ -2,6 +2,7 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
+import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
 import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 
 import java.util.List;
@@ -57,6 +58,6 @@ public class ClosestDirectionMatching implements Matching<GpsPoint, MatchingResu
 
     protected boolean judgeDirection(double d1, double d2) {
         double tmp = Math.abs(d1 - d2);
-        return tmp <= 1.5 * MatchingConstants.DIR_STANDARD_DEVIATION || Math.abs(tmp - 360) <= 1.5 * MatchingConstants.DIR_STANDARD_DEVIATION;
+        return tmp <= 1.5 * ModelConstants.DIR_STANDARD_DEVIATION || Math.abs(tmp - 360) <= 1.5 * ModelConstants.DIR_STANDARD_DEVIATION;
     }
 }

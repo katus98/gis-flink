@@ -5,7 +5,7 @@ import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
 import cn.edu.zju.gis.td.common.io.LineIterator;
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
-import cn.edu.zju.gis.td.example.experiment.matching.MatchingConstants;
+import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -54,7 +54,7 @@ public class GpsProcessing {
             for (int i = 1; i < list.size(); i++) {
                 GpsPoint gpsPoint = list.get(i);
                 if (filter) {
-                    if (gpsPoint.usefulValueEquals(previousGps) || (gpsPoint.posEquals(previousGps) && gpsPoint.getTimestamp() - previousGps.getTimestamp() > MatchingConstants.MAX_FILTER_DELTA_TIME)) {
+                    if (gpsPoint.usefulValueEquals(previousGps) || (gpsPoint.posEquals(previousGps) && gpsPoint.getTimestamp() - previousGps.getTimestamp() > ModelConstants.MAX_FILTER_DELTA_TIME)) {
                         continue;
                     }
                     previousGps = gpsPoint;

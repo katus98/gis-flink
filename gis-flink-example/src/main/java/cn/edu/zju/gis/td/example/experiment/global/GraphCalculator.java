@@ -1,7 +1,6 @@
 package cn.edu.zju.gis.td.example.experiment.global;
 
 import cn.edu.zju.gis.td.example.experiment.entity.*;
-import cn.edu.zju.gis.td.example.experiment.matching.MatchingConstants;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
@@ -67,7 +66,7 @@ public class GraphCalculator {
         if (edgeWithInfo.getId() == getStartEdgeId()) {
             return fixCost((startPoint.getRatioToNextNode() - endPoint.getRatioToNextNode()) * edgeWithInfo.cost());
         }
-        return nodeGraphMap.containsKey(edgeWithInfo.getStartId()) ? nodeGraphMap.get(edgeWithInfo.getStartId()).getCumulativeCost() + (1 - endPoint.getRatioToNextNode()) * edgeWithInfo.cost() : MatchingConstants.MAX_COST;
+        return nodeGraphMap.containsKey(edgeWithInfo.getStartId()) ? nodeGraphMap.get(edgeWithInfo.getStartId()).getCumulativeCost() + (1 - endPoint.getRatioToNextNode()) * edgeWithInfo.cost() : ModelConstants.MAX_COST;
     }
 
     /**
@@ -202,7 +201,7 @@ public class GraphCalculator {
                     // Dijkstra 最短路径算法
                     int n = nodeGraphMap.size();
                     for (int i = 1; i < n; i++) {
-                        double minCost = MatchingConstants.MAX_COST;
+                        double minCost = ModelConstants.MAX_COST;
                         for (Map.Entry<Long, GraphNode> entry : nodeGraphMap.entrySet()) {
                             long nodeId = entry.getKey();
                             GraphNode graphNode = entry.getValue();
@@ -212,7 +211,7 @@ public class GraphCalculator {
                             }
                         }
                         // 短路, 如果未访问节点中已经不存在可到达的节点则直接中断计算
-                        if (minCost == MatchingConstants.MAX_COST) {
+                        if (minCost == ModelConstants.MAX_COST) {
                             break;
                         }
                         nodeGraphMap.get(startId).setVisited(true);

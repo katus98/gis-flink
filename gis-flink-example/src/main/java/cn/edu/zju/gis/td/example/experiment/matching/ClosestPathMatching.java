@@ -2,6 +2,7 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 
 import cn.edu.zju.gis.td.example.experiment.entity.*;
 import cn.edu.zju.gis.td.example.experiment.global.GraphCalculator;
+import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
 import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.state.ValueState;
@@ -30,7 +31,7 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
             return false;
         }
         // 仅限新GPS时间与上一个时间不超过最大时间间隔
-        return gpsPoint.getTimestamp() - previousMR.getGpsPoint().getTimestamp() < MatchingConstants.MAX_DELTA_TIME;
+        return gpsPoint.getTimestamp() - previousMR.getGpsPoint().getTimestamp() < ModelConstants.MAX_DELTA_TIME;
     }
 
     @Override
@@ -52,7 +53,7 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         // 计算与上一次匹配点的间隔时间
         long deltaTime = gpsPoint.getTimestamp() - previousMR.getGpsPoint().getTimestamp();
         // 计算时间间隔内的最大可能通行范围
-        double radius = MatchingConstants.MAX_ALLOW_SPEED * (deltaTime / 1000.0) + 2 * MatchingConstants.GPS_TOLERANCE;
+        double radius = ModelConstants.MAX_ALLOW_SPEED * (deltaTime / 1000.0) + 2 * ModelConstants.GPS_TOLERANCE;
         // 获取可能的最近匹配点
         List<MatchingResult> candidates = QueryUtil.queryNearCandidates(gpsPoint);
         if (candidates.isEmpty()) {
@@ -69,7 +70,7 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         // 防止一个都没有
         nodeGraphMap.put(previousMR.getEdgeWithInfo().getEndId(), null);
         // 判断候选点
-        double minCost = MatchingConstants.MAX_COST;
+        double minCost = ModelConstants.MAX_COST;
         for (MatchingResult candidate : candidates) {
             double cost = calculator.computeCost(candidate);
             if (cost < minCost) {

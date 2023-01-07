@@ -4,6 +4,7 @@ import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.GraphNode;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
 import cn.edu.zju.gis.td.example.experiment.global.GraphCalculator;
+import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
 import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.state.ValueState;
@@ -177,7 +178,7 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
         // 计算与上一次匹配点的间隔时间
         long deltaTime = gpsPoint.getTimestamp() - previousGPS.getTimestamp();
         // 计算时间间隔内的最大可能通行范围
-        double radius = MatchingConstants.MAX_ALLOW_SPEED * (deltaTime / 1000.0) + 2 * MatchingConstants.GPS_TOLERANCE;
+        double radius = ModelConstants.MAX_ALLOW_SPEED * (deltaTime / 1000.0) + 2 * ModelConstants.GPS_TOLERANCE;
         // 获取范围内的所有边ID
         Set<Long> edgeIds = QueryUtil.queryEdgeIdsWithinRange(previousCandidates.get(0).getOriginalPoint(), radius);
         // 获取范围内的所有节点ID

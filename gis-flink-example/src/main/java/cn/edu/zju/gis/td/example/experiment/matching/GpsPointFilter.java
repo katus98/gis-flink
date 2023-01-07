@@ -1,6 +1,7 @@
 package cn.edu.zju.gis.td.example.experiment.matching;
 
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
+import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
 import org.apache.flink.api.common.functions.RichFilterFunction;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
@@ -29,7 +30,7 @@ public class GpsPointFilter extends RichFilterFunction<GpsPoint> {
             return false;
         }
         if (gpsPoint.posEquals(previousGpsPoint)) {
-            return gpsPoint.getTimestamp() - previousGpsPoint.getTimestamp() <= MatchingConstants.MAX_FILTER_DELTA_TIME;
+            return gpsPoint.getTimestamp() - previousGpsPoint.getTimestamp() <= ModelConstants.MAX_FILTER_DELTA_TIME;
         }
         gpsPointState.update(gpsPoint);
         return true;

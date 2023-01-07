@@ -1,6 +1,6 @@
 package cn.edu.zju.gis.td.example.experiment.entity;
 
-import cn.edu.zju.gis.td.example.experiment.matching.MatchingConstants;
+import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,7 +20,7 @@ public class GraphNode {
     public GraphNode(long id) {
         this.id = id;
         this.visited = false;
-        this.cumulativeCost = MatchingConstants.MAX_COST;
+        this.cumulativeCost = ModelConstants.MAX_COST;
         this.previousNodeId = -1;
         this.presentEdgeId = -1;
     }

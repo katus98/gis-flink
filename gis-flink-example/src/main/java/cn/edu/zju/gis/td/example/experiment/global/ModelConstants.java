@@ -1,10 +1,10 @@
-package cn.edu.zju.gis.td.example.experiment.matching;
+package cn.edu.zju.gis.td.example.experiment.global;
 
 /**
  * @author SUN Katus
  * @version 1.0, 2022-12-10
  */
-public final class MatchingConstants {
+public final class ModelConstants {
     public static final long MAX_DELTA_TIME;
     public static final long MAX_FILTER_DELTA_TIME;
     public static final double MAX_ALLOW_SPEED;

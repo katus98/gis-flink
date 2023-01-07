@@ -2,6 +2,7 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 
 import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
 import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
+import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
@@ -39,7 +40,7 @@ public abstract class HiddenMarkovMatching extends RichFlatMapFunction<GpsPoint,
         double[] eps = new double[errors.length];
 //        double sigma = 1.4826 * median(errors);
         for (int i = 0; i < eps.length; i++) {
-            eps[i] = emissionProbability(errors[i], MatchingConstants.DIS_STANDARD_DEVIATION);
+            eps[i] = emissionProbability(errors[i], ModelConstants.DIS_STANDARD_DEVIATION);
         }
         return eps;
     }
@@ -65,7 +66,7 @@ public abstract class HiddenMarkovMatching extends RichFlatMapFunction<GpsPoint,
         double avg = 0.0;
         int count = 0;
         for (double v : array) {
-            if (v < MatchingConstants.MAX_COST / 10) {
+            if (v < ModelConstants.MAX_COST / 10) {
                 avg += v;
                 count++;
             }
@@ -76,14 +77,14 @@ public abstract class HiddenMarkovMatching extends RichFlatMapFunction<GpsPoint,
     private double median(double[] array) {
         int c = 0;
         for (double v : array) {
-            if (v < MatchingConstants.MAX_COST / 10) {
+            if (v < ModelConstants.MAX_COST / 10) {
                 c++;
             }
         }
         double[] nArray = new double[c];
         c = 0;
         for (double v : array) {
-            if (v < MatchingConstants.MAX_COST / 10) {
+            if (v < ModelConstants.MAX_COST / 10) {
                 nArray[c++] = v;
             }
         }

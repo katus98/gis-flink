@@ -1,7 +1,6 @@
 package cn.edu.zju.gis.td.example.experiment.global;
 
 import cn.edu.zju.gis.td.example.experiment.entity.*;
-import cn.edu.zju.gis.td.example.experiment.matching.MatchingConstants;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.opengis.referencing.operation.TransformException;
@@ -41,7 +40,7 @@ public final class QueryUtil {
                 "SELECT edges_f_pair.*, ST_Distance(geom, ip.p) AS dis, ST_AsText(ST_ClosestPoint(geom, ip.p)) as cp\n" +
                 "FROM edges_f_pair, ip\n" +
                 "WHERE ST_DWithin(geom, ip.p, %d)\n" +
-                "ORDER BY dis", gpsPoint.getLon(), gpsPoint.getLat(), GlobalConfig.SRID_WGS84, GlobalConfig.SRID_WGS84_UTM_50N, MatchingConstants.MATCHING_TOLERANCE);
+                "ORDER BY dis", gpsPoint.getLon(), gpsPoint.getLat(), GlobalConfig.SRID_WGS84, GlobalConfig.SRID_WGS84_UTM_50N, ModelConstants.MATCHING_TOLERANCE);
         Map<String, Boolean> osmFilterMap = new HashMap<>();
         Connection conn = GlobalConfig.PG_ORI_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
@@ -216,6 +215,6 @@ public final class QueryUtil {
     }
 
     public static boolean isRealNode(long id) {
-        return id > MatchingConstants.CENTER_POINT_NUMBER || BOTH_ID_SET.contains(id);
+        return id > ModelConstants.CENTER_POINT_NUMBER || BOTH_ID_SET.contains(id);
     }
 }
