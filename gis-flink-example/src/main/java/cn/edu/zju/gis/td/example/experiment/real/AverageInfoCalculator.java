@@ -1,6 +1,7 @@
 package cn.edu.zju.gis.td.example.experiment.real;
 
 import cn.edu.zju.gis.td.example.experiment.entity.*;
+import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
 import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.functions.RichMapFunction;
@@ -36,6 +37,7 @@ public class AverageInfoCalculator extends RichMapFunction<RealTimeStopInfo, Ave
     @Override
     public AverageLocationInfo map(RealTimeStopInfo stopInfo) throws Exception {
         LocationTaxis locationTaxis = locationTaxisState.value();
+        // 如果是第一次更新的位置需要初始化状态信息
         if (locationTaxis == null) {
             if (LocationType.EDGE.equals(locationType)) {
                 locationTaxis = QueryUtil.initEdgeLocationById(stopInfo.getId());
@@ -43,12 +45,19 @@ public class AverageInfoCalculator extends RichMapFunction<RealTimeStopInfo, Ave
                 locationTaxis = QueryUtil.initAnaUnitsLocationById(stopInfo.getId());
             }
         }
+        // 计算时间窗口内的平均交通量
         long currentTime = stopInfo.getTimestamp();
         locationTaxis.addEvent(new TaxiEvent(stopInfo.getTaxiId(), currentTime, stopInfo.getSpeed()));
-        locationTaxis.expire(currentTime, 10800000L);
+        locationTaxis.expire(currentTime, ModelConstants.TIME_WINDOW);
         double speed = locationTaxis.obtainAvgSpeed();
         double flow = locationTaxis.obtainFlowCount();
-        // todo 更新数据库中的信息
+        // 更新数据库中的信息
+        if (LocationType.EDGE.equals(locationType)) {
+            QueryUtil.updateInfoToEdge(stopInfo.getId(), flow, speed);
+        } else {
+            QueryUtil.updateInfoToAnaUnit(stopInfo.getId(), flow, speed);
+        }
+        // 更新状态
         locationTaxisState.update(locationTaxis);
         return new AverageLocationInfo(stopInfo.getId(), currentTime, flow, speed);
     }

@@ -16,6 +16,7 @@ public final class ModelConstants {
     public static final double DIS_STANDARD_DEVIATION, DIR_STANDARD_DEVIATION;
     public static final int CENTER_POINT_NUMBER;
     public static final double MAX_COST;
+    public static final long TIME_WINDOW;
 
     static {
         MAX_DELTA_TIME = 60000L;
@@ -30,5 +31,6 @@ public final class ModelConstants {
         DIR_STANDARD_DEVIATION = 10.0;
         CENTER_POINT_NUMBER = 73715;
         MAX_COST = 1.0 * Integer.MAX_VALUE;
+        TIME_WINDOW = 10800000L;
     }
 }

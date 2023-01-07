@@ -52,6 +52,7 @@ public class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTi
             Map<Long, GraphNode> nodeGraphMap = QueryUtil.queryNodeIdsWithinRange(previousMP.getMatX(), previousMP.getMatY(), radius);
             GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);
             calculator.setStartPoint(previousMP);
+            // 根据位置类型计算对应的途经位置信息
             List<StopInfo> stops;
             switch (locationType) {
                 case EDGE:
@@ -69,6 +70,7 @@ public class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTi
                 default:
                     stops = Collections.emptyList();
             }
+            // 如果新位置可以由上个位置抵达, 则开始计算每个位置对应的速度
             if (calculator.canArrived(matPoint)) {
                 double totalCost = calculator.computeCost(matPoint);
                 double accCost = 0.0;

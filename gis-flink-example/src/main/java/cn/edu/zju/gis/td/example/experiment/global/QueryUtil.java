@@ -5,10 +5,7 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.opengis.referencing.operation.TransformException;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -198,6 +195,38 @@ public final class QueryUtil {
         stmt.close();
         conn.close();
         return locationTaxis;
+    }
+
+    /**
+     * 更新图边实时信息
+     */
+    public static int updateInfoToEdge(long id, double flow, double speed) throws SQLException {
+        String sql = "UPDATE graph_edges_jinhua SET flow = ?, velocity = ?, time = length / (velocity / 3.6) WHERE id = ?";
+        Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
+        PreparedStatement preStmt = conn.prepareStatement(sql);
+        preStmt.setDouble(1, flow);
+        preStmt.setDouble(2, speed);
+        preStmt.setLong(3, id);
+        int res = preStmt.executeUpdate();
+        preStmt.close();
+        conn.close();
+        return res;
+    }
+
+    /**
+     * 更新分析单元实时信息
+     */
+    public static int updateInfoToAnaUnit(long id, double flow, double speed) throws SQLException {
+        String sql = "UPDATE analysis_units SET flow = ?, velocity = ? WHERE id = ?";
+        Connection conn = GlobalConfig.PG_ANA_SOURCE.getConnection();
+        PreparedStatement preStmt = conn.prepareStatement(sql);
+        preStmt.setDouble(1, flow);
+        preStmt.setDouble(2, speed);
+        preStmt.setLong(3, id);
+        int res = preStmt.executeUpdate();
+        preStmt.close();
+        conn.close();
+        return res;
     }
 
     static void loadBothIds() throws SQLException {
