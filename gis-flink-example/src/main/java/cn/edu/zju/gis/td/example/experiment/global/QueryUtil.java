@@ -154,11 +154,51 @@ public final class QueryUtil {
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
-        Edge edge = new Edge(rs);
+        Edge edge = null;
+        while (rs.next()) {
+            edge = new Edge(rs);
+        }
         rs.close();
         stmt.close();
         conn.close();
         return edge;
+    }
+
+    /**
+     * 根据ID从边信息中查询初始速度
+     */
+    public static LocationTaxis initEdgeLocationById(long id) throws SQLException {
+        String sql = String.format("SELECT id, init_velocity FROM graph_edges_jinhua WHERE id = %d", id);
+        Collection<LocationTaxis> list = new ArrayList<>();
+        Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        LocationTaxis locationTaxis = null;
+        while (rs.next()) {
+            locationTaxis = new LocationTaxis(rs);
+        }
+        rs.close();
+        stmt.close();
+        conn.close();
+        return locationTaxis;
+    }
+
+    /**
+     * 根据ID从分析单元信息中查询初始速度
+     */
+    public static LocationTaxis initAnaUnitsLocationById(long id) throws SQLException {
+        String sql = String.format("SELECT id, init_velocity FROM analysis_units WHERE id = %d", id);
+        Connection conn = GlobalConfig.PG_ANA_SOURCE.getConnection();
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        LocationTaxis locationTaxis = null;
+        while (rs.next()) {
+            locationTaxis = new LocationTaxis(rs);
+        }
+        rs.close();
+        stmt.close();
+        conn.close();
+        return locationTaxis;
     }
 
     static void loadBothIds() throws SQLException {

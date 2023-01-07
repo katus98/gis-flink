@@ -80,30 +80,30 @@ public class GraphCalculator {
     /**
      * 获取最短路径上的全部结点ID
      */
-    public List<Long> acquireRouteAllNodeIds(Matchable endPoint) throws SQLException {
+    public List<StopInfo> acquireRouteAllNodeStops(Matchable endPoint) throws SQLException {
         endPoint.update();
         buildNodeGraphMap();
-        List<Long> nodeIds = new LinkedList<>();
+        List<StopInfo> stops = new LinkedList<>();
         Edge edgeWithInfo = endPoint.getEdge();
         if (edgeWithInfo.getId() != getStartEdgeId() && canArrived(endPoint)) {
             long node = edgeWithInfo.getStartId();
             while (node != -1L) {
-                nodeIds.set(0, node);
+                stops.add(0, new StopInfo(node, nodeGraphMap.get(node).getCumulativeCost()));
                 node = nodeGraphMap.get(node).getPreviousNodeId();
             }
         }
-        return nodeIds;
+        return stops;
     }
 
     /**
      * 获取最短路径上的真实结点ID
      */
-    public List<Long> acquireRouteRealNodeIds(Matchable endPoint) throws SQLException {
-        List<Long> allNodeIds = acquireRouteAllNodeIds(endPoint);
-        List<Long> nodeIds = new ArrayList<>();
-        for (Long nodeId : allNodeIds) {
-            if (QueryUtil.isRealNode(nodeId)) {
-                nodeIds.add(nodeId);
+    public List<StopInfo> acquireRouteRealNodeStops(Matchable endPoint) throws SQLException {
+        List<StopInfo> allNodeIds = acquireRouteAllNodeStops(endPoint);
+        List<StopInfo> nodeIds = new ArrayList<>();
+        for (StopInfo stop : allNodeIds) {
+            if (QueryUtil.isRealNode(stop.getId())) {
+                nodeIds.add(stop);
             }
         }
         return nodeIds;
@@ -112,12 +112,12 @@ public class GraphCalculator {
     /**
      * 获取最短路径上的路段中心点ID
      */
-    public List<Long> acquireRouteCenterPointIds(Matchable endPoint) throws SQLException {
-        List<Long> allNodeIds = acquireRouteAllNodeIds(endPoint);
-        List<Long> nodeIds = new ArrayList<>();
-        for (Long nodeId : allNodeIds) {
-            if (!QueryUtil.isRealNode(nodeId)) {
-                nodeIds.add(nodeId);
+    public List<StopInfo> acquireRouteCenterPointStops(Matchable endPoint) throws SQLException {
+        List<StopInfo> allNodeIds = acquireRouteAllNodeStops(endPoint);
+        List<StopInfo> nodeIds = new ArrayList<>();
+        for (StopInfo stop : allNodeIds) {
+            if (!QueryUtil.isRealNode(stop.getId())) {
+                nodeIds.add(stop);
             }
         }
         return nodeIds;
@@ -137,25 +137,25 @@ public class GraphCalculator {
     /**
      * 获取最短路径上的全部边ID
      */
-    public List<Long> acquireRouteAllEdgeIds(Matchable endPoint) throws SQLException {
+    public List<StopInfo> acquireRouteAllEdgeStops(Matchable endPoint) throws SQLException {
         endPoint.update();
         buildNodeGraphMap();
-        List<Long> edgeIds = new LinkedList<>();
+        List<StopInfo> stops = new LinkedList<>();
         if (!canArrived(endPoint)) {
-            return edgeIds;
+            return stops;
         }
         Edge edgeWithInfo = endPoint.getEdge();
         if (edgeWithInfo.getId() != getStartEdgeId()) {
             long node = edgeWithInfo.getStartId();
-            edgeIds.add(edgeWithInfo.getId());
+            stops.add(new StopInfo(edgeWithInfo.getId(), computeCost(endPoint)));
             while (node != -1L) {
-                edgeIds.set(0, nodeGraphMap.get(node).getPresentEdgeId());
+                stops.add(0, new StopInfo(nodeGraphMap.get(node).getPresentEdgeId(), nodeGraphMap.get(node).getCumulativeCost()));
                 node = nodeGraphMap.get(node).getPreviousNodeId();
             }
         } else {
-            edgeIds.add(edgeWithInfo.getId());
+            stops.add(new StopInfo(edgeWithInfo.getId(), computeCost(endPoint)));
         }
-        return edgeIds;
+        return stops;
     }
 
     private void initNodeGraphMap() {
