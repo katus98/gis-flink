@@ -52,8 +52,8 @@ public class RealTimeInfoTest {
                 .keyBy(MatPoint::getTaxiId);
         String testName = "real-time-cal-test1";
         // 设置输出路径
-        String edgeFilename = "F:\\data\\graduation\\real\\edge\\" + testName;
-        String cpFilename = "F:\\data\\graduation\\real\\cp\\" + testName;
+        String edgeFilename = "E:\\data\\graduation\\real\\edge\\" + testName;
+        String cpFilename = "E:\\data\\graduation\\real\\cp\\" + testName;
         FsManipulator fsManipulator = FsManipulatorFactory.create();
         if (!fsManipulator.exists(edgeFilename)) {
             fsManipulator.makeDirectories(edgeFilename);

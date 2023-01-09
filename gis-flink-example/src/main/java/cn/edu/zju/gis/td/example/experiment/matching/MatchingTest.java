@@ -3,10 +3,7 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 import cn.edu.zju.gis.td.common.io.FsManipulator;
 import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
 import cn.edu.zju.gis.td.common.io.LineIterator;
-import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
-import cn.edu.zju.gis.td.example.experiment.entity.GpsPointSerSchema;
-import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
-import cn.edu.zju.gis.td.example.experiment.entity.SerializedData;
+import cn.edu.zju.gis.td.example.experiment.entity.*;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -14,13 +11,18 @@ import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringEncoder;
+import org.apache.flink.api.connector.sink2.Sink;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.configuration.MemorySize;
+import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
+import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.core.fs.Path;
-import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.sink.filesystem.OutputFileConfig;
 import org.apache.flink.streaming.api.functions.sink.filesystem.StreamingFileSink;
 import org.apache.flink.streaming.api.functions.sink.filesystem.bucketassigners.DateTimeBucketAssigner;
@@ -51,7 +53,7 @@ public class MatchingTest {
 
     public static void main(String[] args) throws Exception {
         GlobalUtil.initialize();
-        matchingGlobal();
+        matchingStream();
     }
 
     private static void matchingStream() throws Exception {
@@ -64,17 +66,34 @@ public class MatchingTest {
                 .setStartingOffsets(OffsetsInitializer.timestamp(GlobalConfig.TIME_0501))
                 .setValueOnlyDeserializer(new GpsPointSerSchema())
                 .build();
-        DataStreamSource<SerializedData.GpsPointSer> resSource = env.fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TOPIC);
         // 指定匹配算法类型
         Matching<GpsPoint, MatchingResult> matching = new CachedPresentHiddenMarkovMatching(5);
+        // 是否输出到文件
+        boolean outToFile = true;
+        SingleOutputStreamOperator<MatchingResult> resultStream = env
+                .fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TOPIC)
+                .map((MapFunction<SerializedData.GpsPointSer, GpsPoint>) GpsPoint::new)
+                .keyBy((KeySelector<GpsPoint, Integer>) GpsPoint::getTaxiId)
+                .flatMap(matching)
+                .filter(Objects::nonNull);
+        // 定向结果流输出
+        if (outToFile) {
+            resultStream.addSink(obtainFileSink(matching.name()));
+        } else {
+            resultStream.map(it -> new MatPoint(it).toSer()).sinkTo(obtainKafkaSink());
+        }
+        env.execute(matching.name());
+    }
+
+    private static SinkFunction<MatchingResult> obtainFileSink(String matchingName) throws IOException {
         // 设置输出路径
-        String outFilename = "F:\\data\\graduation\\matching\\" + matching.name();
+        String outFilename = "E:\\data\\graduation\\matching\\" + matchingName;
         FsManipulator fsManipulator = FsManipulatorFactory.create();
         if (!fsManipulator.exists(outFilename)) {
             fsManipulator.makeDirectories(outFilename);
         }
         // 设置文件输出
-        StreamingFileSink<MatchingResult> sink = StreamingFileSink
+        return StreamingFileSink
                 .forRowFormat(new Path(outFilename), new SimpleStringEncoder<MatchingResult>())
                 .withBucketAssigner(new DateTimeBucketAssigner<>())
                 .withRollingPolicy(DefaultRollingPolicy.builder()
@@ -87,20 +106,24 @@ public class MatchingTest {
                         .withPartSuffix(".csv")
                         .build())
                 .build();
-        // 流式匹配算法
-        resSource.map((MapFunction<SerializedData.GpsPointSer, GpsPoint>) GpsPoint::new)
-                .keyBy((KeySelector<GpsPoint, Integer>) GpsPoint::getTaxiId)
-                .flatMap(matching)
-                .filter(Objects::nonNull)
-                .addSink(sink);
-        env.execute(matching.name());
+    }
+
+    private static Sink<SerializedData.MatPointSer> obtainKafkaSink() {
+        return KafkaSink.<SerializedData.MatPointSer>builder()
+                .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
+                .setRecordSerializer(KafkaRecordSerializationSchema.<SerializedData.MatPointSer>builder()
+                        .setTopic(GlobalConfig.KAFKA_MPS_TOPIC)
+                        .setKafkaValueSerializer(MatPointSerSchema.class)
+                        .build())
+                .setDeliverGuarantee(DeliveryGuarantee.NONE)
+                .build();
     }
 
     private static void matchingGlobal() throws IOException, SQLException, TransformException, ParseException {
         FsManipulator fsManipulator = FsManipulatorFactory.create();
         GlobalHiddenMarkovMatching globalHiddenMarkovMatching = new GlobalHiddenMarkovMatching();
-        String[] filenames = fsManipulator.list("F:\\data\\graduation\\gpsFilter");
-        String outPath = "F:\\data\\graduation\\matching\\" + globalHiddenMarkovMatching.name() + "\\";
+        String[] filenames = fsManipulator.list("E:\\data\\graduation\\gpsFilter");
+        String outPath = "E:\\data\\graduation\\matching\\" + globalHiddenMarkovMatching.name() + "\\";
         Set<String> outFilenameSet = Arrays.stream(fsManipulator.list(outPath)).collect(Collectors.toSet());
         for (String filename : filenames) {
             String name = filename.substring(filename.lastIndexOf("\\") + 1);

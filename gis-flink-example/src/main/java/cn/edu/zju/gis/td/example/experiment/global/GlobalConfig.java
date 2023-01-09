@@ -51,8 +51,8 @@ public final class GlobalConfig {
 
     static {
         KAFKA_SERVER = "*:9092";
-        KAFKA_GPS_TOPIC = "taxi-test-0501";
-        KAFKA_MPS_TOPIC = "mps-exp";
+        KAFKA_GPS_TOPIC = "taxi-ser-1119";
+        KAFKA_MPS_TOPIC = "mps-ser-1119";
         KAFKA_ILLEGALITY_TOPIC = "illegal";
         KAFKA_ACCIDENT_TOPIC = "accident";
         TIME_0501 = 1651334400000L;
