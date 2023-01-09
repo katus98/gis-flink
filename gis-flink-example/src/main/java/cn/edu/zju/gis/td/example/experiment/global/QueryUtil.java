@@ -165,7 +165,6 @@ public final class QueryUtil {
      */
     public static LocationTaxis initEdgeLocationById(long id) throws SQLException {
         String sql = String.format("SELECT id, init_velocity FROM graph_edges_jinhua WHERE id = %d", id);
-        Collection<LocationTaxis> list = new ArrayList<>();
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
@@ -200,33 +199,31 @@ public final class QueryUtil {
     /**
      * 更新图边实时信息
      */
-    public static int updateInfoToEdge(long id, double flow, double speed) throws SQLException {
-        String sql = "UPDATE graph_edges_jinhua SET flow = ?, velocity = ?, time = length / (velocity / 3.6) WHERE id = ?";
+    public static void updateInfoToEdge(long id, double flow, double speed) throws SQLException {
+        String sql = "UPDATE graph_edges_jinhua SET flow = ?, velocity = ?, time = length / (? / 3.6) WHERE id = ?";
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         PreparedStatement preStmt = conn.prepareStatement(sql);
         preStmt.setDouble(1, flow);
         preStmt.setDouble(2, speed);
-        preStmt.setLong(3, id);
-        int res = preStmt.executeUpdate();
+        preStmt.setDouble(3, speed);
+        preStmt.setLong(4, id);
+        preStmt.executeUpdate();
         preStmt.close();
         conn.close();
-        return res;
     }
 
     /**
      * 更新分析单元实时信息
      */
-    public static int updateInfoToAnaUnit(long id, double flow, double speed) throws SQLException {
+    public static void updateInfoToAnaUnit(long id, double flow, double speed) throws SQLException {
         String sql = "UPDATE analysis_units SET flow = ?, velocity = ? WHERE id = ?";
         Connection conn = GlobalConfig.PG_ANA_SOURCE.getConnection();
         PreparedStatement preStmt = conn.prepareStatement(sql);
         preStmt.setDouble(1, flow);
         preStmt.setDouble(2, speed);
         preStmt.setLong(3, id);
-        int res = preStmt.executeUpdate();
         preStmt.close();
         conn.close();
-        return res;
     }
 
     static void loadBothIds() throws SQLException {
