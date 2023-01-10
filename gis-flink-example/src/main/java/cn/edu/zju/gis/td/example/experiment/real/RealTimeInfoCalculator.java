@@ -4,6 +4,7 @@ import cn.edu.zju.gis.td.example.experiment.entity.*;
 import cn.edu.zju.gis.td.example.experiment.global.GraphCalculator;
 import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
@@ -21,6 +22,7 @@ import java.util.Set;
  * @author SUN Katus
  * @version 1.0, 2023-01-02
  */
+@Slf4j
 public class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTimeStopInfo> {
     private final LocationType locationType;
     private transient ValueState<MatPoint> matPointState;
@@ -60,6 +62,7 @@ public class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTi
                     break;
                 case CENTER_POINT:
                     stops = calculator.acquireRouteCenterPointStops(matPoint);
+                    // todo 针对中心点特别处理 分别根据车的前后两个位置查询对应的分析单元ID添加到经停中
                     break;
                 case REAL_NODE:
                     stops = calculator.acquireRouteRealNodeStops(matPoint);
@@ -77,12 +80,17 @@ public class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTi
                 long curTime = previousMP.getTimestamp();
                 for (StopInfo stop : stops) {
                     double cost = stop.getCost() - accCost;
-                    double ratio = cost / totalCost;
-                    double time = deltaTime * ratio;
+                    double time;
+                    if (totalCost > 0.0) {
+                        time = deltaTime * (cost / totalCost);
+                    } else {
+                        time = deltaTime;
+                    }
                     curTime += time;
                     double speed = cost / (time / 1000.0);
                     collector.collect(new RealTimeStopInfo(stop.getId(), matPoint.getTaxiId(), curTime, speed));
                     accCost = stop.getCost();
+                    log.debug("{} : TAXI-{} {}-{} speed = {}", curTime, matPoint.getTaxiId(), locationType.name(), stop.getId(), speed);
                 }
             }
         }

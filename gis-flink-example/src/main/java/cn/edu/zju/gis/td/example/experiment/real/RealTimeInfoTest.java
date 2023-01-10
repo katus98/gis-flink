@@ -5,6 +5,7 @@ import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
 import cn.edu.zju.gis.td.example.experiment.entity.*;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -29,6 +30,7 @@ import java.time.temporal.ChronoUnit;
  * @author SUN Katus
  * @version 1.0, 2023-01-02
  */
+@Slf4j
 public class RealTimeInfoTest {
     public static void main(String[] args) throws Exception {
         GlobalUtil.initialize();
@@ -42,7 +44,7 @@ public class RealTimeInfoTest {
         KafkaSource<SerializedData.MatPointSer> source = KafkaSource.<SerializedData.MatPointSer>builder()
                 .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
                 .setTopics(GlobalConfig.KAFKA_MPS_TOPIC)
-                .setStartingOffsets(OffsetsInitializer.timestamp(GlobalConfig.TIME_0501))
+                .setStartingOffsets(OffsetsInitializer.earliest())
                 .setValueOnlyDeserializer(new MatPointSerSchema())
                 .build();
         // 创建匹配流并以taxiId作为key

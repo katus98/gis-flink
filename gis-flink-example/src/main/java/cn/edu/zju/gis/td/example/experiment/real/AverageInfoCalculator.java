@@ -59,6 +59,7 @@ public class AverageInfoCalculator extends RichMapFunction<RealTimeStopInfo, Ave
         }
         // 更新状态
         locationTaxisState.update(locationTaxis);
+        log.debug("{} : {}-{} flow = {}, speed = {}", currentTime, locationType.name(), stopInfo.getId(), flow, speed);
         return new AverageLocationInfo(stopInfo.getId(), currentTime, flow, speed);
     }
 }
