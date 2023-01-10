@@ -54,6 +54,8 @@ public class GraphCalculator {
         startPoint.update();
         this.startPoint = startPoint;
         this.isFinished = false;
+        // 将起始位置的末端点加入图, 防止图结构完全缺失导致的空指针异常
+        this.nodeGraphMap.put(startPoint.getEdge().getEndId(), null);
     }
 
     /**

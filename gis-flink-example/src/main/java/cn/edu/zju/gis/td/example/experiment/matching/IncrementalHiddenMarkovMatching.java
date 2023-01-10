@@ -95,8 +95,6 @@ public class IncrementalHiddenMarkovMatching extends HiddenMarkovMatching {
         // 构建图计算器
         GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);
         calculator.setStartPoint(previousMR);
-        // 防止一个都没有
-        nodeGraphMap.put(previousMR.getEdgeWithInfo().getEndId(), null);
         // 计算转移概率
         double[] dts = new double[candidates.size()];
         for (int i = 0; i < candidates.size(); i++) {

@@ -103,8 +103,6 @@ public class PresentHiddenMarkovMatching extends HiddenMarkovMatching {
         double[][] dts = new double[candidates.size()][previousCandidates.size()];
         for (int i = 0; i < previousCandidates.size(); i++) {
             MatchingResult previousCandidate = previousCandidates.get(i);
-            // 防止一个都没有
-            nodeGraphMap.put(previousCandidate.getEdgeWithInfo().getEndId(), null);
             calculator.setStartPoint(previousCandidate);
             for (int j = 0; j < candidates.size(); j++) {
                 MatchingResult candidate = candidates.get(j);

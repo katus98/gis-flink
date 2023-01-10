@@ -67,8 +67,6 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         // 构建图计算器
         GraphCalculator calculator = new GraphCalculator(nodeGraphMap, edgeIds);
         calculator.setStartPoint(previousMR);
-        // 防止一个都没有
-        nodeGraphMap.put(previousMR.getEdgeWithInfo().getEndId(), null);
         // 判断候选点
         double minCost = ModelConstants.MAX_COST;
         for (MatchingResult candidate : candidates) {
