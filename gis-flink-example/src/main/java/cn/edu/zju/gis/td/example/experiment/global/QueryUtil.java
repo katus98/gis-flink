@@ -222,6 +222,7 @@ public final class QueryUtil {
         preStmt.setDouble(1, flow);
         preStmt.setDouble(2, speed);
         preStmt.setLong(3, id);
+        preStmt.executeUpdate();
         preStmt.close();
         conn.close();
     }
