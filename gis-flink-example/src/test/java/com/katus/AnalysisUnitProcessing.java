@@ -74,18 +74,18 @@ public class AnalysisUnitProcessing {
 
     private static void updateLineGeom(String line) throws SQLException {
         String sql = "UPDATE analysis_units SET " +
-                "length = ? " +
-                "osm_id = ? " +
-                "fclass = ? " +
-                "ori_name = ? " +
-                "ori_ref = ? " +
-                "new_name = ? " +
-                "new_ref = ? " +
-                "oneway = ? " +
-                "maxspeed = ? " +
-                "is_bridge = ? " +
-                "is_tunnel = ? " +
-                "hierarchy = ? " +
+                "length = ?, " +
+                "osm_id = ?, " +
+                "fclass = ?, " +
+                "ori_name = ?, " +
+                "ori_ref = ?, " +
+                "new_name = ?, " +
+                "new_ref = ?, " +
+                "oneway = ?, " +
+                "maxspeed = ?, " +
+                "is_bridge = ?, " +
+                "is_tunnel = ?, " +
+                "hierarchy = ?, " +
                 "roads_geom = ST_GeomFromText(?, 32650) " +
                 "WHERE id = ?";
         String[] items = line.split("\t");
@@ -108,5 +108,6 @@ public class AnalysisUnitProcessing {
         preStmt.executeUpdate();
         preStmt.close();
         conn.close();
+        log.info("ID: {} FINISHED!", items[0]);
     }
 }
