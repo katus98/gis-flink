@@ -23,16 +23,12 @@ import java.util.Set;
  * @version 1.0, 2023-01-02
  */
 @Slf4j
-public class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTimeStopInfo> {
-    private final LocationType locationType;
+public abstract class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTimeStopInfo> {
+    protected final LocationType locationType;
     private transient ValueState<MatPoint> matPointState;
 
-    public RealTimeInfoCalculator(LocationType locationType) {
+    protected RealTimeInfoCalculator(LocationType locationType) {
         this.locationType = locationType;
-    }
-
-    public RealTimeInfoCalculator() {
-        this(LocationType.EDGE);
     }
 
     @Override
@@ -62,7 +58,22 @@ public class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTi
                     break;
                 case CENTER_POINT:
                     stops = calculator.acquireRouteCenterPointStops(matPoint);
-                    // todo 针对中心点特别处理 分别根据车的前后两个位置查询对应的分析单元ID添加到经停中
+                    // 实际上中心点表示的实际意义是分析单元路段, 所以不能仅包括经过, 起点终点所在分析单元也需要包含
+                    long id1 = QueryUtil.queryCenterPointIdWithGeometry(previousMP);
+                    if (stops.isEmpty() || (id1 != -1L && stops.get(0).getId() != id1)) {
+                        if (!stops.isEmpty()) {
+                            double nCost = stops.get(0).getCost();
+                            // 估算如果存在后续节点则成本为后者一半
+                            stops.add(0, new StopInfo(id1, nCost / 2.0));
+                        } else {
+                            // 如果不存在后续成本暂时设置为0
+                            stops.add(0, new StopInfo(id1, 0.0));
+                        }
+                    }
+                    long id2 = QueryUtil.queryCenterPointIdWithGeometry(matPoint);
+                    if (id2 != -1L && stops.get(stops.size() - 1).getId() != id2) {
+                        stops.add(new StopInfo(id2, calculator.computeCost(matPoint)));
+                    }
                     break;
                 case REAL_NODE:
                     stops = calculator.acquireRouteRealNodeStops(matPoint);
@@ -75,25 +86,15 @@ public class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTi
             }
             // 如果新位置可以由上个位置抵达, 则开始计算每个位置对应的速度
             if (calculator.canArrived(matPoint)) {
-                double totalCost = calculator.computeCost(matPoint);
-                double accCost = 0.0;
-                long curTime = previousMP.getTimestamp();
-                for (StopInfo stop : stops) {
-                    double cost = stop.getCost() - accCost;
-                    double time;
-                    if (totalCost > 0.0) {
-                        time = deltaTime * (cost / totalCost);
-                    } else {
-                        time = deltaTime;
-                    }
-                    curTime += time;
-                    double speed = cost / (time / 1000.0);
-                    collector.collect(new RealTimeStopInfo(stop.getId(), matPoint.getTaxiId(), curTime, speed));
-                    accCost = stop.getCost();
-                    log.debug("{} : TAXI-{} {}-{} speed = {}", curTime, matPoint.getTaxiId(), locationType.name(), stop.getId(), speed);
+                List<RealTimeStopInfo> list = computeRealTimeInfo(stops, previousMP, matPoint, calculator.computeCost(matPoint));
+                for (RealTimeStopInfo info : list) {
+                    collector.collect(info);
+                    log.debug("{} : TAXI-{} {}-{} flow = {}, speed = {}", info.getTimestamp(), matPoint.getTaxiId(), locationType.name(), info.getId(), info.getFlow(), info.getSpeed());
                 }
             }
         }
         matPointState.update(matPoint);
     }
+
+    public abstract List<RealTimeStopInfo> computeRealTimeInfo(List<StopInfo> stops, MatPoint previousMP, MatPoint matPoint, double totalCost);
 }

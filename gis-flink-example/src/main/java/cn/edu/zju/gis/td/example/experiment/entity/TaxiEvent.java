@@ -12,11 +12,13 @@ import lombok.Getter;
 public class TaxiEvent {
     private final int taxiId;
     private final long timestamp;
+    private final int flow;
     private final double speed;
 
-    public TaxiEvent(int taxiId, long timestamp, double speed) {
+    public TaxiEvent(int taxiId, long timestamp, int flow, double speed) {
         this.taxiId = taxiId;
         this.timestamp = timestamp;
+        this.flow = flow;
         this.speed = speed;
     }
 }

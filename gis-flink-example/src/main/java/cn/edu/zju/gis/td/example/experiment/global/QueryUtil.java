@@ -227,6 +227,33 @@ public final class QueryUtil {
         conn.close();
     }
 
+    /**
+     * 根据匹配点位置获取所在分析单元ID
+     */
+    public static long queryCenterPointIdWithGeometry(Matchable point) throws SQLException {
+        return queryCenterPointIdWithGeometry(point.getMatchingPoint().getX(), point.getMatchingPoint().getY());
+    }
+
+    public static long queryCenterPointIdWithGeometry(double x, double y) throws SQLException {
+        String sql = String.format("WITH ip AS (SELECT ST_GeomFromText('POINT(%f %f)', %d) AS p)\n" +
+                "SELECT analysis_units.id AS id\n" +
+                "FROM analysis_units, ip\n" +
+                "WHERE ST_DWithin(roads_geom, ip.p, 2)\n" +
+                "ORDER BY ST_Distance(roads_geom, ip.p)\n" +
+                "LIMIT 1", x, y, GlobalConfig.SRID_WGS84_UTM_50N);
+        Connection conn = GlobalConfig.PG_ANA_SOURCE.getConnection();
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        long id = -1L;
+        while (rs.next()) {
+            id = rs.getLong("id");
+        }
+        rs.close();
+        stmt.close();
+        conn.close();
+        return id;
+    }
+
     static void loadBothIds() throws SQLException {
         String sql = "SELECT id FROM nodes_f WHERE is_node IS TRUE AND is_center IS TRUE";
         BOTH_ID_SET.clear();

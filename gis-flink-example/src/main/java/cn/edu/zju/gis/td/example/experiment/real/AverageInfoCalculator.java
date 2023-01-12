@@ -47,7 +47,7 @@ public class AverageInfoCalculator extends RichMapFunction<RealTimeStopInfo, Ave
         }
         // 计算时间窗口内的平均交通量
         long currentTime = stopInfo.getTimestamp();
-        locationTaxis.addEvent(new TaxiEvent(stopInfo.getTaxiId(), currentTime, stopInfo.getSpeed()));
+        locationTaxis.addEvent(new TaxiEvent(stopInfo.getTaxiId(), currentTime, stopInfo.getFlow(), stopInfo.getSpeed()));
         locationTaxis.expire(currentTime, ModelConstants.TIME_WINDOW);
         double speed = locationTaxis.obtainAvgSpeed();
         double flow = locationTaxis.obtainFlowCount();

@@ -89,12 +89,12 @@ public class RealTimeInfoTest {
                 .build();
         // 流计算过程
         taxiIdKeyedMatPointStream
-                .flatMap(new RealTimeInfoCalculator(LocationType.EDGE))
+                .flatMap(new UniformSpeedCalculator(LocationType.EDGE))
                 .keyBy(RealTimeStopInfo::getId)
                 .map(new AverageInfoCalculator(LocationType.EDGE))
                 .addSink(edgeSink);
         taxiIdKeyedMatPointStream
-                .flatMap(new RealTimeInfoCalculator(LocationType.CENTER_POINT))
+                .flatMap(new UniformSpeedCalculator(LocationType.CENTER_POINT))
                 .keyBy(RealTimeStopInfo::getId)
                 .map(new AverageInfoCalculator(LocationType.CENTER_POINT))
                 .addSink(cpSink);
