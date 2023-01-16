@@ -37,16 +37,17 @@ message AccidentPointSer {
   int64 timestamp = 2;
   string address = 3;
   int32 injuredNumber = 4;
-  int32 deathLaterNumber = 5;
-  int32 missingNumber = 6;
-  int32 injuredNumber7 = 7;
-  int32 deathNumber7 = 8;
-  double lon = 9;
-  double lat = 10;
-  int32 comprehension = 11;
+  int32 deathNumber = 5;
+  int32 deathLaterNumber = 6;
+  int32 missingNumber = 7;
+  int32 injuredNumber7 = 8;
+  int32 deathNumber7 = 9;
+  double lon = 10;
+  double lat = 11;
+  int32 comprehension = 12;
 }
 
-message IllegalPointSer {
+message IllegalityPointSer {
   int64 id = 1;
   int64 timestamp = 2;
   string site = 3;
