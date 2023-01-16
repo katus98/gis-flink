@@ -43,13 +43,13 @@ public class RealTimeInfoTest {
         // 设置数据源
         KafkaSource<SerializedData.MatPointSer> source = KafkaSource.<SerializedData.MatPointSer>builder()
                 .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
-                .setTopics(GlobalConfig.KAFKA_MPS_TOPIC)
+                .setTopics(GlobalConfig.KAFKA_MPS_TEST_TOPIC)
                 .setStartingOffsets(OffsetsInitializer.earliest())
                 .setValueOnlyDeserializer(new MatPointSerSchema())
                 .build();
         // 创建匹配流并以taxiId作为key
         KeyedStream<MatPoint, Integer> taxiIdKeyedMatPointStream = env
-                .fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_MPS_TOPIC)
+                .fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_MPS_TEST_TOPIC)
                 .map((MapFunction<SerializedData.MatPointSer, MatPoint>) MatPoint::new)
                 .keyBy(MatPoint::getTaxiId);
         String testName = "real-time-cal-test1";

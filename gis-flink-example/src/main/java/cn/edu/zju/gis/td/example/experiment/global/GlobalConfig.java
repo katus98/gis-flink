@@ -42,7 +42,9 @@ public final class GlobalConfig {
      * 消息队列
      */
     public static final String KAFKA_SERVER;
+    public static final String KAFKA_GPS_TEST_TOPIC;
     public static final String KAFKA_GPS_TOPIC;
+    public static final String KAFKA_MPS_TEST_TOPIC;
     public static final String KAFKA_MPS_TOPIC;
     public static final String KAFKA_ILLEGALITY_TOPIC;
     public static final String KAFKA_ACCIDENT_TOPIC;
@@ -51,9 +53,11 @@ public final class GlobalConfig {
 
     static {
         KAFKA_SERVER = "*:9092";
-        KAFKA_GPS_TOPIC = "taxi-ser-1119";
-        KAFKA_MPS_TOPIC = "mps-ser-1119";
-        KAFKA_ILLEGALITY_TOPIC = "illegal";
+        KAFKA_GPS_TEST_TOPIC = "taxi-ser-1119";
+        KAFKA_GPS_TOPIC = "gps-all";
+        KAFKA_MPS_TEST_TOPIC = "mps-ser-1119";
+        KAFKA_MPS_TOPIC = "mps-all";
+        KAFKA_ILLEGALITY_TOPIC = "illegality";
         KAFKA_ACCIDENT_TOPIC = "accident";
         TIME_0501 = 1651334400000L;
         TIME_0504 = 1651593600000L;

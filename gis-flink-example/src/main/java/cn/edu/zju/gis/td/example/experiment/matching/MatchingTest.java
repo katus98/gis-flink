@@ -62,7 +62,7 @@ public class MatchingTest {
         // 设置数据源
         KafkaSource<SerializedData.GpsPointSer> source = KafkaSource.<SerializedData.GpsPointSer>builder()
                 .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
-                .setTopics(GlobalConfig.KAFKA_GPS_TOPIC)
+                .setTopics(GlobalConfig.KAFKA_GPS_TEST_TOPIC)
                 .setStartingOffsets(OffsetsInitializer.timestamp(GlobalConfig.TIME_0501))
                 .setValueOnlyDeserializer(new GpsPointSerSchema())
                 .build();
@@ -71,7 +71,7 @@ public class MatchingTest {
         // 是否输出到文件
         boolean outToFile = true;
         SingleOutputStreamOperator<MatchingResult> resultStream = env
-                .fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TOPIC)
+                .fromSource(source, WatermarkStrategy.forMonotonousTimestamps(), GlobalConfig.KAFKA_GPS_TEST_TOPIC)
                 .map((MapFunction<SerializedData.GpsPointSer, GpsPoint>) GpsPoint::new)
                 .keyBy((KeySelector<GpsPoint, Integer>) GpsPoint::getTaxiId)
                 .flatMap(matching)
@@ -112,7 +112,7 @@ public class MatchingTest {
         return KafkaSink.<SerializedData.MatPointSer>builder()
                 .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
                 .setRecordSerializer(KafkaRecordSerializationSchema.<SerializedData.MatPointSer>builder()
-                        .setTopic(GlobalConfig.KAFKA_MPS_TOPIC)
+                        .setTopic(GlobalConfig.KAFKA_MPS_TEST_TOPIC)
                         .setKafkaValueSerializer(MatPointSerSchema.class)
                         .build())
                 .setDeliverGuarantee(DeliveryGuarantee.NONE)
