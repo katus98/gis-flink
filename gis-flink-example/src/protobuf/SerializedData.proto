@@ -31,3 +31,28 @@ message MatPointSer {
   int64 timestamp = 10;
   double speed = 11;
 }
+
+message AccidentPointSer {
+  int64 id = 1;
+  int64 timestamp = 2;
+  string address = 3;
+  int32 injuredNumber = 4;
+  int32 deathLaterNumber = 5;
+  int32 missingNumber = 6;
+  int32 injuredNumber7 = 7;
+  int32 deathNumber7 = 8;
+  double lon = 9;
+  double lat = 10;
+  int32 comprehension = 11;
+}
+
+message IllegalPointSer {
+  int64 id = 1;
+  int64 timestamp = 2;
+  string site = 3;
+  string address = 4;
+  string type = 5;
+  double lon = 6;
+  double lat = 7;
+  int32 comprehension = 8;
+}
