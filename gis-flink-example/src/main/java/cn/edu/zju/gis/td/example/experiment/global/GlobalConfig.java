@@ -48,6 +48,7 @@ public final class GlobalConfig {
     public static final String KAFKA_MPS_TOPIC;
     public static final String KAFKA_ILLEGALITY_TOPIC;
     public static final String KAFKA_ACCIDENT_TOPIC;
+    public static final int KAFKA_PARTITION_COUNT;
     public static final long TIME_0501;
     public static final long TIME_0504;
 
@@ -59,6 +60,7 @@ public final class GlobalConfig {
         KAFKA_MPS_TOPIC = "mps-all";
         KAFKA_ILLEGALITY_TOPIC = "illegality";
         KAFKA_ACCIDENT_TOPIC = "accident";
+        KAFKA_PARTITION_COUNT = 4;
         TIME_0501 = 1651334400000L;
         TIME_0504 = 1651593600000L;
     }
