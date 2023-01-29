@@ -22,7 +22,7 @@ public class AnalysisUnitProcessing {
     public static void main(String[] args) throws IOException, SQLException {
 //        log.info("{}", check("E:\\data\\graduation\\roads_ori\\roads_seg_f.csv"));
 //        generateWKT("E:\\data\\graduation\\roads_ori\\roads_seg_f.csv", "E:\\data\\graduation\\roads_ori\\wkt_seg_f.csv");
-        updateAllLineGeom("E:\\data\\graduation\\roads_ori\\wkt_seg_f.csv");
+        updateAllLineGeom("D:\\data\\graduation\\roads_ori\\wkt_seg_f.csv");
     }
 
     /**
@@ -72,6 +72,9 @@ public class AnalysisUnitProcessing {
         }
     }
 
+    /**
+     * 根据ID更新分析单元信息
+     */
     private static void updateLineGeom(String line) throws SQLException {
         String sql = "UPDATE analysis_units SET " +
                 "length = ?, " +
