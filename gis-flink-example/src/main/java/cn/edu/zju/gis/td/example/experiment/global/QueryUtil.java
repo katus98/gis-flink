@@ -254,6 +254,36 @@ public final class QueryUtil {
         return id;
     }
 
+    public static void queryTrafficEventUnitId(TrafficEvent event) throws SQLException {
+        String sql = String.format("WITH ip AS (SELECT ST_Transform(ST_GeomFromText('POINT(%f %f)', %d), %d) AS p)\n" +
+                "SELECT id, ori_name, ori_ref, new_name, new_ref\n" +
+                "FROM analysis_units, ip\n" +
+                "WHERE ST_DWithin(roads_geom, ip.p, %d)\n" +
+                "ORDER BY ST_Distance(roads_geom, ip.p)", event.getLon(), event.getLat(),
+                GlobalConfig.SRID_WGS84, GlobalConfig.SRID_WGS84_UTM_50N, 100);
+        Connection conn = GlobalConfig.PG_ANA_SOURCE.getConnection();
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        long id = -1L;
+        while (rs.next()) {
+            if (id == -1L) {
+                id = rs.getLong("id");
+            }
+            String oriName = rs.getString("ori_name");
+            String oriRef = rs.getString("ori_ref");
+            String newName = rs.getString("new_name");
+            String newRef = rs.getString("new_ref");
+            if (event.checkAddressContains(oriName, oriRef, newName, newRef)) {
+                id = rs.getLong("id");
+                break;
+            }
+        }
+        rs.close();
+        stmt.close();
+        conn.close();
+        event.setUnitId(id);
+    }
+
     static void loadBothIds() throws SQLException {
         String sql = "SELECT id FROM nodes_f WHERE is_node IS TRUE AND is_center IS TRUE";
         BOTH_ID_SET.clear();
