@@ -254,6 +254,9 @@ public final class QueryUtil {
         return id;
     }
 
+    /**
+     * 根据经纬度与地名地址信息确定交通时间发生所在的分析单元ID
+     */
     public static void queryTrafficEventUnitId(TrafficEvent event) throws SQLException {
         String sql = String.format("WITH ip AS (SELECT ST_Transform(ST_GeomFromText('POINT(%f %f)', %d), %d) AS p)\n" +
                 "SELECT id, ori_name, ori_ref, new_name, new_ref\n" +
@@ -282,6 +285,40 @@ public final class QueryUtil {
         stmt.close();
         conn.close();
         event.setUnitId(id);
+    }
+
+    /**
+     * 根据交通事故流更新分析单元
+     */
+    public static void updateAccidentInfoToAnaUnit(AccidentAccumulator accumulator) throws SQLException {
+        String sql = "UPDATE analysis_units SET death_index = ? WHERE id = ?";
+        Connection conn = GlobalConfig.PG_ANA_SOURCE.getConnection();
+        PreparedStatement preStmt = conn.prepareStatement(sql);
+        preStmt.setDouble(1, accumulator.getDeathIndexNumber());
+        preStmt.setLong(2, accumulator.getUnitId());
+        preStmt.executeUpdate();
+        preStmt.close();
+        conn.close();
+    }
+
+    /**
+     * 根据交通违法流更新分析单元
+     */
+    public static void updateIllegalityInfoToAnaUnit(IllegalityAccumulator accumulator) throws SQLException {
+        String sql = "UPDATE analysis_units SET ill_scramble_count = ?, ill_behavior_count = ?, ill_reverse_count = ?," +
+                "ill_overspeed_count = ?, ill_signals_count = ?, ill_others_count = ? WHERE id = ?";
+        Connection conn = GlobalConfig.PG_ANA_SOURCE.getConnection();
+        PreparedStatement preStmt = conn.prepareStatement(sql);
+        preStmt.setDouble(1, accumulator.getByType(IllegalityType.SCRAMBLE));
+        preStmt.setDouble(2, accumulator.getByType(IllegalityType.BEHAVIOR));
+        preStmt.setDouble(3, accumulator.getByType(IllegalityType.REVERSE));
+        preStmt.setDouble(4, accumulator.getByType(IllegalityType.OVER_SPEED));
+        preStmt.setDouble(5, accumulator.getByType(IllegalityType.SIGNALS));
+        preStmt.setDouble(6, accumulator.getByType(IllegalityType.OTHERS));
+        preStmt.setLong(7, accumulator.getUnitId());
+        preStmt.executeUpdate();
+        preStmt.close();
+        conn.close();
     }
 
     static void loadBothIds() throws SQLException {

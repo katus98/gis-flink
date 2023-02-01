@@ -2,7 +2,13 @@ package cn.edu.zju.gis.td.example.experiment.entity;
 
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
+ * 交通违法类型
+ *
  * @author SUN Katus
  * @version 1.0, 2023-01-30
  */
@@ -42,4 +48,6 @@ public enum IllegalityType {
                 return OTHERS;
         }
     }
+
+    public static final List<IllegalityType> ALL_TYPES = Collections.unmodifiableList(Arrays.asList(SCRAMBLE, BEHAVIOR, REVERSE, OVER_SPEED, SIGNALS, OTHERS));
 }
