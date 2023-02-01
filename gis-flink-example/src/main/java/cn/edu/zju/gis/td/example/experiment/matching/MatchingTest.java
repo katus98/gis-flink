@@ -4,6 +4,8 @@ import cn.edu.zju.gis.td.common.io.FsManipulator;
 import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
 import cn.edu.zju.gis.td.common.io.LineIterator;
 import cn.edu.zju.gis.td.example.experiment.entity.*;
+import cn.edu.zju.gis.td.example.experiment.entity.schema.GpsPointSerSchema;
+import cn.edu.zju.gis.td.example.experiment.entity.schema.MatPointSerSchema;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalUtil;
 import lombok.extern.slf4j.Slf4j;

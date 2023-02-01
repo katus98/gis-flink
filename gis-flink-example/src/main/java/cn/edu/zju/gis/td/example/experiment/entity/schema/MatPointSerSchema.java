@@ -1,5 +1,6 @@
-package cn.edu.zju.gis.td.example.experiment.entity;
+package cn.edu.zju.gis.td.example.experiment.entity.schema;
 
+import cn.edu.zju.gis.td.example.experiment.entity.SerializedData;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
