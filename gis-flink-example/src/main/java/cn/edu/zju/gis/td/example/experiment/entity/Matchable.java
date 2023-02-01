@@ -12,4 +12,9 @@ public interface Matchable {
     Edge getEdge();
     double getRatioToNextNode();
     void update();
+    boolean isRouteStart();
+    long getTimestamp();
+    double getMatX();
+    double getMatY();
+    int getTaxiId();
 }

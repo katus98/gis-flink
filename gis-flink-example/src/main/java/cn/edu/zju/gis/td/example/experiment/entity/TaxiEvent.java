@@ -9,6 +9,7 @@ import lombok.Getter;
  * @version 1.0, 2023-01-07
  */
 @Getter
+@Deprecated
 public class TaxiEvent {
     private final int taxiId;
     private final long timestamp;

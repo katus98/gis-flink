@@ -32,6 +32,7 @@ import java.time.temporal.ChronoUnit;
  * @version 1.0, 2023-01-02
  */
 @Slf4j
+@Deprecated
 public class RealTimeInfoTest {
     public static void main(String[] args) throws Exception {
         GlobalUtil.initialize();
@@ -90,12 +91,12 @@ public class RealTimeInfoTest {
                 .build();
         // 流计算过程
         taxiIdKeyedMatPointStream
-                .flatMap(new UniformSpeedCalculator(LocationType.EDGE))
+                .flatMap(new UniformSpeedCalculator<>(LocationType.EDGE))
                 .keyBy(RealTimeStopInfo::getId)
                 .map(new AverageInfoCalculator(LocationType.EDGE))
                 .addSink(edgeSink);
         taxiIdKeyedMatPointStream
-                .flatMap(new UniformSpeedCalculator(LocationType.CENTER_POINT))
+                .flatMap(new UniformSpeedCalculator<>(LocationType.CENTER_POINT))
                 .keyBy(RealTimeStopInfo::getId)
                 .map(new AverageInfoCalculator(LocationType.CENTER_POINT))
                 .addSink(cpSink);

@@ -11,6 +11,7 @@ import java.util.LinkedList;
  * @author SUN Katus
  * @version 1.0, 2023-01-07
  */
+@Deprecated
 public class LocationTaxis {
     private final long locationId;
     private final double initialSpeed;

@@ -163,6 +163,7 @@ public final class QueryUtil {
     /**
      * 根据ID从边信息中查询初始速度
      */
+    @Deprecated
     public static LocationTaxis initEdgeLocationById(long id) throws SQLException {
         String sql = String.format("SELECT id, init_velocity FROM graph_edges_jinhua WHERE id = %d", id);
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
@@ -179,9 +180,23 @@ public final class QueryUtil {
     }
 
     /**
+     * 根据ID从边信息中重置速度
+     */
+    public static void resetEdgeSpeedById(long id) throws SQLException {
+        String sql = "UPDATE graph_edges_jinhua SET velocity = init_velocity WHERE id = ?";
+        Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
+        PreparedStatement preStmt = conn.prepareStatement(sql);
+        preStmt.setLong(1, id);
+        preStmt.executeUpdate();
+        preStmt.close();
+        conn.close();
+    }
+
+    /**
      * 根据ID从分析单元信息中查询初始速度
      */
-    public static LocationTaxis initAnaUnitsLocationById(long id) throws SQLException {
+    @Deprecated
+    public static LocationTaxis initAnaUnitLocationById(long id) throws SQLException {
         String sql = String.format("SELECT id, init_velocity FROM analysis_units WHERE id = %d", id);
         Connection conn = GlobalConfig.PG_ANA_SOURCE.getConnection();
         Statement stmt = conn.createStatement();
@@ -194,6 +209,19 @@ public final class QueryUtil {
         stmt.close();
         conn.close();
         return locationTaxis;
+    }
+
+    /**
+     * 根据ID从分析单元信息中重置速度
+     */
+    public static void resetAnaUnitSpeedById(long id) throws SQLException {
+        String sql = "UPDATE analysis_units SET velocity = init_velocity WHERE id = ?";
+        Connection conn = GlobalConfig.PG_ANA_SOURCE.getConnection();
+        PreparedStatement preStmt = conn.prepareStatement(sql);
+        preStmt.setLong(1, id);
+        preStmt.executeUpdate();
+        preStmt.close();
+        conn.close();
     }
 
     /**

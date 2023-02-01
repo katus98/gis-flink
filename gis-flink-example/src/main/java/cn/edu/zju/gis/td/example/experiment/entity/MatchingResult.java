@@ -113,6 +113,26 @@ public class MatchingResult implements Matchable {
     }
 
     @Override
+    public long getTimestamp() {
+        return gpsPoint.getTimestamp();
+    }
+
+    @Override
+    public double getMatX() {
+        return matchingPoint.getX();
+    }
+
+    @Override
+    public double getMatY() {
+        return matchingPoint.getY();
+    }
+
+    @Override
+    public int getTaxiId() {
+        return gpsPoint.getTaxiId();
+    }
+
+    @Override
     public String toString() {
         return toMatchingLine();
     }

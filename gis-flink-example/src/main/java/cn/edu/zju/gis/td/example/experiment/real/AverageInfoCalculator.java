@@ -16,6 +16,7 @@ import org.apache.flink.configuration.Configuration;
  * @version 1.0, 2023-01-07
  */
 @Slf4j
+@Deprecated
 public class AverageInfoCalculator extends RichMapFunction<RealTimeStopInfo, AverageLocationInfo> {
     private final LocationType locationType;
     private transient ValueState<LocationTaxis> locationTaxisState;
@@ -42,7 +43,7 @@ public class AverageInfoCalculator extends RichMapFunction<RealTimeStopInfo, Ave
             if (LocationType.EDGE.equals(locationType)) {
                 locationTaxis = QueryUtil.initEdgeLocationById(stopInfo.getId());
             } else {
-                locationTaxis = QueryUtil.initAnaUnitsLocationById(stopInfo.getId());
+                locationTaxis = QueryUtil.initAnaUnitLocationById(stopInfo.getId());
             }
         }
         // 计算时间窗口内的平均交通量

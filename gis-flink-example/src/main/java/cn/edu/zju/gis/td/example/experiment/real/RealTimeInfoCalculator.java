@@ -23,9 +23,9 @@ import java.util.Set;
  * @version 1.0, 2023-01-02
  */
 @Slf4j
-public abstract class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoint, RealTimeStopInfo> {
+public abstract class RealTimeInfoCalculator<MAT extends Matchable> extends RichFlatMapFunction<MAT, RealTimeStopInfo> {
     protected final LocationType locationType;
-    private transient ValueState<MatPoint> matPointState;
+    private transient ValueState<Matchable> matPointState;
 
     protected RealTimeInfoCalculator(LocationType locationType) {
         this.locationType = locationType;
@@ -33,12 +33,12 @@ public abstract class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoin
 
     @Override
     public void open(Configuration parameters) {
-        this.matPointState = getRuntimeContext().getState(new ValueStateDescriptor<>("mat-point", MatPoint.class));
+        this.matPointState = getRuntimeContext().getState(new ValueStateDescriptor<>("mat-point", Matchable.class));
     }
 
     @Override
-    public void flatMap(MatPoint matPoint, Collector<RealTimeStopInfo> collector) throws Exception {
-        MatPoint previousMP = matPointState.value();
+    public void flatMap(MAT matPoint, Collector<RealTimeStopInfo> collector) throws Exception {
+        Matchable previousMP = matPointState.value();
         if (previousMP != null && !matPoint.isRouteStart()) {
             // 计算与上一次匹配点的间隔时间
             long deltaTime = matPoint.getTimestamp() - previousMP.getTimestamp();
@@ -96,5 +96,5 @@ public abstract class RealTimeInfoCalculator extends RichFlatMapFunction<MatPoin
         matPointState.update(matPoint);
     }
 
-    public abstract List<RealTimeStopInfo> computeRealTimeInfo(List<StopInfo> stops, MatPoint previousMP, MatPoint matPoint, double totalCost);
+    public abstract List<RealTimeStopInfo> computeRealTimeInfo(List<StopInfo> stops, Matchable previousMP, MAT matPoint, double totalCost);
 }
