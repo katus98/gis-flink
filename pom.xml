@@ -41,7 +41,7 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <flink.version>1.15.2</flink.version>
+        <flink.version>1.15.3</flink.version>
         <slf4j.version>1.7.32</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <kafka.clients.version>3.3.1</kafka.clients.version>
@@ -55,6 +55,8 @@
         <trilead-ssh2.version>1.0.0-build222</trilead-ssh2.version>
         <gt.version>28.0</gt.version>
         <nd4j.version>1.0.0-M2.1</nd4j.version>
+        <scala.version>2.12.17</scala.version>
+        <scala.binary.version>2.12</scala.binary.version>
     </properties>
 
     <dependencyManagement>
@@ -93,6 +95,21 @@
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-connector-kafka</artifactId>
                 <version>${flink.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-scala_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-streaming-scala_${scala.binary.version}</artifactId>
+                <version>${flink.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scala.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.kafka</groupId>
