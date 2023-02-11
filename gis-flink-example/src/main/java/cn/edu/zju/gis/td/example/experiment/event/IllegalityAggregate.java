@@ -2,6 +2,7 @@ package cn.edu.zju.gis.td.example.experiment.event;
 
 import cn.edu.zju.gis.td.example.experiment.entity.IllegalityAccumulator;
 import cn.edu.zju.gis.td.example.experiment.entity.IllegalityPoint;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.functions.AggregateFunction;
 
 /**
@@ -10,6 +11,7 @@ import org.apache.flink.api.common.functions.AggregateFunction;
  * @author SUN Katus
  * @version 1.0, 2023-01-31
  */
+@Slf4j
 public class IllegalityAggregate implements AggregateFunction<IllegalityPoint, IllegalityAccumulator, IllegalityAccumulator> {
     @Override
     public IllegalityAccumulator createAccumulator() {

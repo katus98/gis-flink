@@ -3,7 +3,10 @@ package cn.edu.zju.gis.td.example.experiment.matching;
 import cn.edu.zju.gis.td.common.io.FsManipulator;
 import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
 import cn.edu.zju.gis.td.common.io.LineIterator;
-import cn.edu.zju.gis.td.example.experiment.entity.*;
+import cn.edu.zju.gis.td.example.experiment.entity.GpsPoint;
+import cn.edu.zju.gis.td.example.experiment.entity.MatPoint;
+import cn.edu.zju.gis.td.example.experiment.entity.MatchingResult;
+import cn.edu.zju.gis.td.example.experiment.entity.SerializedData;
 import cn.edu.zju.gis.td.example.experiment.entity.schema.GpsPointSerSchema;
 import cn.edu.zju.gis.td.example.experiment.entity.schema.MatPointSerSchema;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
@@ -115,7 +118,7 @@ public class MatchingTest {
                 .setBootstrapServers(GlobalConfig.KAFKA_SERVER)
                 .setRecordSerializer(KafkaRecordSerializationSchema.<SerializedData.MatPointSer>builder()
                         .setTopic(GlobalConfig.KAFKA_MPS_TEST_TOPIC)
-                        .setKafkaValueSerializer(MatPointSerSchema.class)
+                        .setValueSerializationSchema(new MatPointSerSchema())
                         .build())
                 .setDeliverGuarantee(DeliveryGuarantee.NONE)
                 .build();
