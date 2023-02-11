@@ -34,11 +34,21 @@ public enum IllegalityType {
             case "违法变更车道":
             case "违法超车":
             case "违法抢行":
+            case "违法占道":
+            case "违法占道行驶":
+            case "不按规定使用灯光":
+            case "违法掉头":
+            case "违法会车":
+            case "违法上道路行驶":
                 return SCRAMBLE;
             case "酒后驾驶":
+            case "饮酒驾驶":
+            case "醉酒驾驶":
             case "疲劳驾驶":
+            case "其他影响安全行为":
                 return BEHAVIOR;
             case "逆向行驶":
+            case "逆行":
                 return REVERSE;
             case "超速行驶":
                 return OVER_SPEED;
