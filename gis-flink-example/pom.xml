@@ -17,10 +17,6 @@
             <artifactId>gt-main</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.geotools</groupId>
-            <artifactId>gt-epsg-hsql</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java</artifactId>
             <scope>provided</scope>
@@ -38,7 +34,6 @@
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-kafka</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -107,7 +102,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>cn.edu.zju.gis.td.example.experiment.data.DataStreamGenerator</mainClass>
+                            <mainClass>cn.edu.zju.gis.td.example.experiment.exp.TestExperiment</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
