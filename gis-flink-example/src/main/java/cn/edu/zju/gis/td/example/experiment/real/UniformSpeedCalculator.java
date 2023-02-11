@@ -1,6 +1,7 @@
 package cn.edu.zju.gis.td.example.experiment.real;
 
 import cn.edu.zju.gis.td.example.experiment.entity.*;
+import cn.edu.zju.gis.td.example.experiment.global.ModelConstants;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -30,6 +31,11 @@ public class UniformSpeedCalculator<MAT extends Matchable> extends RealTimeInfoC
         long curTime = previousMP.getTimestamp();
         long deltaTime = matPoint.getTimestamp() - curTime;
         double speed = (totalCost / (deltaTime / 1000.0)) * 3.6;
+        // 防止由于误差导致的极限速度出现
+        if (speed > ModelConstants.MAX_ALLOW_SPEED * 3.6) {
+            log.info("ILLEGAL SPEED APPEAR [{}] AT [{}]", speed, matPoint);
+            speed = ModelConstants.MAX_ALLOW_SPEED * 3.6;
+        }
         for (StopInfo stop : stops) {
             double cost = stop.getCost() - accCost;
             double time;

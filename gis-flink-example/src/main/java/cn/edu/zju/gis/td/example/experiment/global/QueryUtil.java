@@ -232,6 +232,8 @@ public final class QueryUtil {
         Connection conn = GlobalConfig.PG_GRAPH_SOURCE.getConnection();
         PreparedStatement preStmt = conn.prepareStatement(sql);
         preStmt.setDouble(1, flow);
+        // 防止除数为0
+        speed = Math.max(0.01, speed);
         preStmt.setDouble(2, speed);
         preStmt.setDouble(3, speed);
         preStmt.setLong(4, id);
