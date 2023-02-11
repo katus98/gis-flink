@@ -57,31 +57,31 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
     @Override
     public void flatMap(GpsPoint gpsPoint, Collector<MatchingResult> collector) throws Exception {
         // 实验测试用
-        if (gpsPoint.getId() == -1L) {
-            int total = 0, min = Integer.MAX_VALUE, max = -1;
-            for (int count : MatchingTest.BATCH_COUNT_LIST) {
-                if (count > max) {
-                    max = count;
-                }
-                if (count < min) {
-                    min = count;
-                }
-                total += count;
-            }
-            int size = MatchingTest.BATCH_COUNT_LIST.size();
-            double avg = 1.0 * total / size;
-            Collections.sort(MatchingTest.BATCH_COUNT_LIST);
-            log.info("Batch Push Size -- TOL: {}", total);
-            log.info("Batch Push Size -- AVG: {}, MAX: {}, MIN: {}", avg, max, min);
-            int mid = MatchingTest.BATCH_COUNT_LIST.get(size / 2);
-            int mid20 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.8 * size));
-            int mid5 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.95 * size));
-            int mid1 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.99 * size));
-            int mid01 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.999 * size));
-            log.info("Batch Push Size -- MID: {}, MID 20%H: {}, MID 5%H: {}, MID 1%H: {}, MID 0.1%H: {}", mid, mid20, mid5, mid1, mid01);
-            log.info("{},{},{},{},{},{},{},{},{},{}", magnitudeLevel, total, avg, max, min, mid, mid20, mid5, mid1, mid01);
-            log.info("ALL FINISHED!");
-        }
+//        if (gpsPoint.getId() == -1L) {
+//            int total = 0, min = Integer.MAX_VALUE, max = -1;
+//            for (int count : MatchingTest.BATCH_COUNT_LIST) {
+//                if (count > max) {
+//                    max = count;
+//                }
+//                if (count < min) {
+//                    min = count;
+//                }
+//                total += count;
+//            }
+//            int size = MatchingTest.BATCH_COUNT_LIST.size();
+//            double avg = 1.0 * total / size;
+//            Collections.sort(MatchingTest.BATCH_COUNT_LIST);
+//            log.info("Batch Push Size -- TOL: {}", total);
+//            log.info("Batch Push Size -- AVG: {}, MAX: {}, MIN: {}", avg, max, min);
+//            int mid = MatchingTest.BATCH_COUNT_LIST.get(size / 2);
+//            int mid20 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.8 * size));
+//            int mid5 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.95 * size));
+//            int mid1 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.99 * size));
+//            int mid01 = MatchingTest.BATCH_COUNT_LIST.get((int) (0.999 * size));
+//            log.info("Batch Push Size -- MID: {}, MID 20%H: {}, MID 5%H: {}, MID 1%H: {}, MID 0.1%H: {}", mid, mid20, mid5, mid1, mid01);
+//            log.info("{},{},{},{},{},{},{},{},{},{}", magnitudeLevel, total, avg, max, min, mid, mid20, mid5, mid1, mid01);
+//            log.info("ALL FINISHED!");
+//        }
         MatchingResult mr;
 
         // 获取状态值 - 1
@@ -287,8 +287,8 @@ public class CachedPresentHiddenMarkovMatching extends PresentHiddenMarkovMatchi
         }
         // 实验测试用
         if (stack.size() > 0) {
-            log.info("Batch Push Size: {}", stack.size());
-            MatchingTest.BATCH_COUNT_LIST.add(stack.size());
+            log.debug("Batch Push Size: {}", stack.size());
+//            MatchingTest.BATCH_COUNT_LIST.add(stack.size());
         }
         while (!stack.isEmpty()) {
             MatchingResult mr = stack.poll();
