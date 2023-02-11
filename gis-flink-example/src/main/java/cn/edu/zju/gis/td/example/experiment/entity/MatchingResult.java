@@ -42,7 +42,7 @@ public class MatchingResult implements Matchable {
     public MatchingResult(GpsPoint gpsPoint, ResultSet rs) throws SQLException, ParseException, TransformException {
         this.gpsPoint = gpsPoint;
         GeometryFactory factory = JTSFactoryFinder.getGeometryFactory();
-        this.originalPoint = (Point) JTS.transform(factory.createPoint(new Coordinate(gpsPoint.getLat(), gpsPoint.getLon())), GlobalConfig.TRANSFORM_G2P);
+        this.originalPoint = (Point) JTS.transform(factory.createPoint(new Coordinate(gpsPoint.getLon(), gpsPoint.getLat())), GlobalConfig.TRANSFORM_G2P);
         this.matchingPoint = (Point) GlobalUtil.WKT_READER.read(rs.getString("cp"));
         this.edgeWithInfo = new EdgeWithInfo(rs);
         this.error = rs.getDouble("dis");
@@ -78,6 +78,11 @@ public class MatchingResult implements Matchable {
 
     public MatPoint toMatPoint() {
         return new MatPoint(this);
+    }
+
+    @Override
+    public long getId() {
+        return gpsPoint.getId();
     }
 
     @Override

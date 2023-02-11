@@ -16,10 +16,12 @@ import java.util.Map;
 @ToString
 public class IllegalityAccumulator {
     private long unitId;
+    private long timestamp;
     private final Map<IllegalityType, Double> countMap;
 
     public IllegalityAccumulator() {
         this.unitId = -1L;
+        this.timestamp = 0L;
         this.countMap = new HashMap<>();
         for (IllegalityType type : IllegalityType.ALL_TYPES) {
             countMap.put(type, 0.0);
@@ -32,6 +34,7 @@ public class IllegalityAccumulator {
 
     public IllegalityAccumulator accumulate(IllegalityPoint point) {
         this.unitId = point.getUnitId();
+        this.timestamp = Math.max(timestamp, point.getTimestamp());
         IllegalityType type = point.getType();
         double count = this.countMap.get(type);
         this.countMap.put(type, count + 1);
@@ -42,6 +45,7 @@ public class IllegalityAccumulator {
         if (unitId == -1L) {
             this.unitId = acc.getUnitId();
         }
+        this.timestamp = Math.max(timestamp, acc.getTimestamp());
         for (IllegalityType type : IllegalityType.ALL_TYPES) {
             this.countMap.put(type, countMap.get(type) + acc.getByType(type));
         }

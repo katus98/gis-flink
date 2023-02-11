@@ -13,15 +13,18 @@ import lombok.ToString;
 @ToString
 public class AccidentAccumulator {
     private long unitId;
+    private long timestamp;
     private double deathIndexNumber;
 
     public AccidentAccumulator() {
         this.unitId = -1L;
+        this.timestamp = 0L;
         this.deathIndexNumber = 0.0;
     }
 
     public AccidentAccumulator accumulate(AccidentPoint point) {
         this.unitId = point.getUnitId();
+        this.timestamp = Math.max(timestamp, point.getTimestamp());
         this.deathIndexNumber += point.getDeathIndexNumber();
         return this;
     }
@@ -30,6 +33,7 @@ public class AccidentAccumulator {
         if (unitId == -1L) {
             this.unitId = acc.getUnitId();
         }
+        this.timestamp = Math.max(timestamp, acc.getTimestamp());
         this.deathIndexNumber += acc.getDeathIndexNumber();
         return this;
     }

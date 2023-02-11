@@ -7,6 +7,7 @@ import org.locationtech.jts.geom.Point;
  * @version 1.0, 2023-01-03
  */
 public interface Matchable {
+    long getId();
     Point getOriginalPoint();
     Point getMatchingPoint();
     Edge getEdge();

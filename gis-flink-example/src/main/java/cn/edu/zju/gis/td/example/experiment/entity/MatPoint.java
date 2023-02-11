@@ -3,6 +3,7 @@ package cn.edu.zju.gis.td.example.experiment.entity;
 import cn.edu.zju.gis.td.example.experiment.global.QueryUtil;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.locationtech.jts.geom.Coordinate;
@@ -19,6 +20,7 @@ import java.sql.SQLException;
 @Getter
 @Setter
 @Slf4j
+@ToString
 public class MatPoint implements Matchable {
     private long id;
     private int taxiId;
