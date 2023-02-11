@@ -3,6 +3,7 @@ package com.katus;
 import cn.edu.zju.gis.td.common.io.FsManipulator;
 import cn.edu.zju.gis.td.common.io.FsManipulatorFactory;
 import cn.edu.zju.gis.td.common.io.LineIterator;
+import cn.edu.zju.gis.td.example.experiment.entity.IllegalityType;
 import cn.edu.zju.gis.td.example.experiment.global.GlobalConfig;
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,7 +12,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author SUN Katus
@@ -22,7 +25,8 @@ public class AnalysisUnitProcessing {
     public static void main(String[] args) throws IOException, SQLException {
 //        log.info("{}", check("E:\\data\\graduation\\roads_ori\\roads_seg_f.csv"));
 //        generateWKT("E:\\data\\graduation\\roads_ori\\roads_seg_f.csv", "E:\\data\\graduation\\roads_ori\\wkt_seg_f.csv");
-        updateAllLineGeom("D:\\data\\graduation\\roads_ori\\wkt_seg_f.csv");
+//        updateAllLineGeom("D:\\data\\graduation\\roads_ori\\wkt_seg_f.csv");
+        testIllTypes("D:\\data\\graduation\\traffic_ori\\illegal\\illegal_all.csv");
     }
 
     /**
@@ -112,5 +116,30 @@ public class AnalysisUnitProcessing {
         preStmt.close();
         conn.close();
         log.info("ID: {} FINISHED!", items[0]);
+    }
+
+    private static void testIllTypes(String filename) throws IOException {
+        FsManipulator fsManipulator = FsManipulatorFactory.create();
+        LineIterator it = fsManipulator.getLineIterator(filename);
+        Map<IllegalityType, Long> typeMap = new HashMap<>();
+        Map<String, Long> strMap = new HashMap<>();
+        long count = 0L;
+        while (it.hasNext()) {
+            String line = it.next();
+            String[] items = line.split(",");
+            IllegalityType type = IllegalityType.parseFrom(items[23]);
+            strMap.put(items[23], strMap.getOrDefault(items[23], 0L) + 1);
+            typeMap.put(type, typeMap.getOrDefault(type, 0L) + 1);
+            count++;
+            if (count % 1000000 == 0) {
+                log.info("{} finished!", count);
+            }
+        }
+        for (Map.Entry<IllegalityType, Long> entry : typeMap.entrySet()) {
+            log.info("{} : {}", entry.getKey(), entry.getValue());
+        }
+        for (Map.Entry<String , Long> entry : strMap.entrySet()) {
+            log.info("{} : {}", entry.getKey(), entry.getValue());
+        }
     }
 }
