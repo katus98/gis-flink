@@ -102,7 +102,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>cn.edu.zju.gis.td.example.experiment.exp.TestExperiment</mainClass>
+                            <mainClass>cn.edu.zju.gis.td.example.experiment.chart.PathTest</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
