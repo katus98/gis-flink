@@ -68,12 +68,12 @@ public class MatchingResult implements Matchable {
     }
 
     public static String matchingTitle() {
-        return GpsPoint.title() + ",edgeId,oriX,oriY,matX,matY,routeStart";
+        return GpsPoint.title() + ",edgeId,oriX,oriY,matX,matY,routeStart,ratioToNextNode";
     }
 
     public String toMatchingLine() {
         return gpsPoint.toLine() + "," + edgeWithInfo.getId() + "," + originalPoint.getX() + "," + originalPoint.getY()
-                + "," + matchingPoint.getX() + "," + matchingPoint.getY() + "," + routeStart;
+                + "," + matchingPoint.getX() + "," + matchingPoint.getY() + "," + routeStart + "," + ratioToNextNode;
     }
 
     public MatPoint toMatPoint() {
