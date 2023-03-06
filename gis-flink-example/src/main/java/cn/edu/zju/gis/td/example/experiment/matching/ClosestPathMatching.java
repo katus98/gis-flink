@@ -45,6 +45,9 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         // 如果当前位置是一条route的起点
         if (!isCompatible(gpsPoint)) {
             mr = new ClosestDirectionAccurateMatching().map(gpsPoint);
+            if (mr != null) {
+                mr.setRouteStart(true);
+            }
             matchingResultState.update(mr);
             return mr;
         }
@@ -79,6 +82,9 @@ public class ClosestPathMatching extends RichMapFunction<GpsPoint, MatchingResul
         // 如果没有最短路径匹配点则退化为精确方向匹配
         if (mr == null) {
             mr = new ClosestDirectionAccurateMatching().map(gpsPoint);
+            if (mr != null) {
+                mr.setRouteStart(true);
+            }
         }
         matchingResultState.update(mr);
         return mr;
