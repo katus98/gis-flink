@@ -25,7 +25,7 @@ public class AccidentPoint implements TrafficEvent {
         this.timestamp = ser.getTimestamp();
         this.address = ser.getAddress();
         this.deathIndexNumber = ser.getDeathNumber() + ser.getDeathNumber7() + ser.getDeathLaterNumber() +
-                ser.getMissingNumber() + 0.035 * (ser.getInjuredNumber() + ser.getInjuredNumber7());
+                ser.getMissingNumber() + 0.035 * (ser.getInjuredNumber() + ser.getInjuredNumber7()) + 0.012;
         this.lon = ser.getLon();
         this.lat = ser.getLat();
     }
